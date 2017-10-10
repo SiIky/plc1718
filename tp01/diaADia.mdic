@@ -78,6 +78,9 @@ parentesco: padrinho | madrinha | afilhado | padrasto | madrasta
 #--------------------------------------------------------------------- 
 #%the(syn:DE:gn_de:EN:iof=>parentesco)
 #%lang DE EN
+# m -> masculino
+# f -> feminino
+# pl -> plural
 %the(dom=>parentesco)(syn:DE:gn_de:EN)
 
 # pt : de : género Numero do alemão : en

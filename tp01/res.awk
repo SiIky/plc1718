@@ -2,7 +2,9 @@ BEGIN {
     FS="[ \t]+:[ \t]+"
     print "BEGIN"
     comment = 0
-    cabecalho = 0
+    dominio = ""
+    sintax = ""
+    test = []
 }
 
 /^$/ { # linhas em branco
@@ -15,16 +17,28 @@ BEGIN {
 }
 
 /^%/ { # cabecalhos
-    #++cabecalho
-    #print "cabecalho", cabecalho
+    # processar o dominio
+    dominio = $0
+    sub('^.*?(', dominio)
+    sub(').*$', dominio)
+    if (dominio == "") {
+        # dominio universal, caso "()" seja vazio
+        dominio = "uni"
+    }
+
+    # processar a sintax
+    sintax = $0
+    sub('^.*(', sintax)
+    sub(').*$', sintax)
+
+    # vamos usar `dominio` e `sintax`
+    print dominio, sintax
 }
 
 $0 !~ /^[$#%]/ { # as outras linhas
     keyword = $1
-    #FS=":"
     #split($2, vals, " ")
 
-    FS="[ \t]+:[ \t]+"
     split($2, vals, "[ \t]+|[ \t]+")
 
     print keyword
