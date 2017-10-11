@@ -1,5 +1,5 @@
 BEGIN {
-    FS="[ \t]+:[ \t]+"
+    FS="[ \t]*:[ \t]*"
     print "BEGIN"
     comment = 0
     dominio = ""
@@ -16,26 +16,23 @@ BEGIN {
 }
 
 /^%/ { # cabecalhos
-    dominio = ler_dominio($0);
+    dominio = ler_dominio($0)
     print "dom", dominio
-    # processar a sintax
-    sintax = $0
-    sub(/^.*\(/, "", sintax)
-    sub(/).*$/, "", sintax)
-
-    # vamos usar `dominio` e `sintax`
+    sintax = ler_sintax($0)
     print "sin", sintax
 }
 
 $0 !~ /^[$#%]/ { # as outras linhas
-    keyword = $1
-    #split($2, vals, " ")
+    termo_base = $1
+    print termo_base
 
-    split($2, vals, "[ \t]*|[ \t]*")
-
-    print keyword
-    for (val in vals) {
-        print "\t" vals[val]
+    for (n = 2; n <= NF; n++) {
+        print "\tfield", n-1
+        field = $n
+        split_alts(field, alts)
+        for (alt in alts) {
+            print "\t\t" alts[alt]
+        }
     }
 }
 
@@ -45,11 +42,23 @@ END {
 
 function ler_dominio (dominio) {
     if (dominio ~ /\()\(/) {
-        # dominio universal, caso "()" seja vazio
-        dominio = "universal"
+        # dominio universo, caso "()" seja vazio
+        dominio = "universo"
     } else {
         sub(/^.*\(dom=>/, "", dominio)
         sub(/).*$/,  "", dominio)
     }
-    return dominio;
+    return dominio
+}
+
+function ler_sintax (sintax) {
+    # processar a sintax
+    sintax = $0
+    sub(/^.*\(/, "", sintax)
+    sub(/).*$/, "", sintax)
+    return sintax
+}
+
+function split_alts (field, alts) {
+    split(field, alts, /[ \t]*\|[ \t]*/)
 }
