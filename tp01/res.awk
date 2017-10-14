@@ -2,20 +2,24 @@ BEGIN {
     FS="[ \t]*:[ \t]*"
 }
 
+{ # remover comentarios
+    sub(/[ \t]*#.*$/, "")
+}
+
 /^%/ { # cabecalhos
     dominio = ler_dominio($0)
     sintax = ler_sintax($0)
 }
 
 $0 !~ /^[$#%]/ { # as outras linhas
-    termo_base = $1
+    tbase = $1
 
     split(sintax, relacoes, ":")
     for (n = 2; n <= NF; n++) {
         field = $n
         split_alts(field, alts)
         for (alt in alts) {
-            estrutura[dominio][termo_base][relacoes[n]][alts[alt]] = alts[alt]
+            estrutura[dominio][tbase][relacoes[n]][alts[alt]] = alts[alt]
         }
     }
 }
@@ -51,22 +55,19 @@ function split_alts (field, alts) {
 }
 
 function print_to_file (str, filename) {
-    print str > filename
+    print "<meta charset=utf-8>" str > filename
 }
 
 function alien_a (estrutura) {
     for (dom in estrutura) {
-        html = "<h1>" dom "</h1>"
-        html = html "<ul>"
+        html = "<h1>" dom "</h1><ul>"
         for (tbase in estrutura[dom]) {
-            html = html li(tbase)
-            html = html "<ul>"
-            for (n in estrutura[dom][tbase]) {
-                if (n != "DE" && n != "EN") {
-                    html = html li(n)
-                    html = html "<ul>"
-                    for (alt in estrutura[dom][tbase][n]) {
-                        html = html li(estrutura[dom][tbase][n][alt])
+            html = html li(tbase) "<ul>"
+            for (rel in estrutura[dom][tbase]) {
+                if (rel != "DE" && rel != "EN") {
+                    html = html li(rel) "<ul>"
+                    for (alt in estrutura[dom][tbase][rel]) {
+                        html = html li(estrutura[dom][tbase][rel][alt])
                     }
                     html = html "</ul>"
                 }
@@ -79,15 +80,13 @@ function alien_a (estrutura) {
 }
 
 function alien_b (estrutura) {
-    html_pt["EN"] = "<ul>"
-    html_pt["DE"] = "<ul>"
+    html_pt["EN"] = html_pt["DE"] = "<ul>"
 
     for (dom in estrutura) {
         for (tbase in estrutura[dom]) {
             for (n in estrutura[dom][tbase]) {
                 if (n == "DE" || n == "EN") {
-                    html_pt[n] = html_pt[n] li(tbase)
-                    html_pt[n] = html_pt[n] "<ul>"
+                    html_pt[n] = html_pt[n] li(tbase) "<ul>"
                     for (alt in estrutura[dom][tbase][n]) {
                         html_pt[n] = html_pt[n] li(estrutura[dom][tbase][n][alt])
                     }
