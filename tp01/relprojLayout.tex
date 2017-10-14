@@ -14,14 +14,15 @@
 \usepackage{listings}
 %LISTING - GENERAL
 \lstset{
+	language=Awk,							% choose the language of the code
 	basicstyle=\small,
 	numbers=left,
 	numberstyle=\tiny,
 	numbersep=5pt,
 	breaklines=true,
     frame=tB,
-	mathescape=true,  
-	escapeinside={(*@}{@*)}
+	mathescape=true,
+	escapeinside={%*@}{@*%}
 }
 %
 %\lstset{ %
@@ -90,27 +91,21 @@ Os objectivos focam-se em dominar a utilização de Expressões Regulares(padõres) 
 
 \titulo{Problema: Processador de Thesaurus 3}
 
-\begin{description}
 O ficheiro em anexo diaADia.mdic descreve numa sintaxe muito simples entradas de um Thesaurus que se pretende
 criar automaticamente. Cada linha tem 1 ou mais termos. Os termos são separados por ':' representado as relações
 entre eles (instancia, subclasse, relacionado-com, tradução, etc.) ou por '|' representando elementos alternativos, como se mostra a seguir:
-  \end{description}
 
 \begin{description}
 \item [prato principal:]  prato de peixe | prato de carne
   \item [carne de aves de capoeira:] frango | carne de peru| carne de pato
 \end{description}
 
-\begin{description}
 que signfia que 'prato de peixe' ou 'prato de carne' são instâncias de termo 'prato principal'  e que 'frango', 'carne de peru' ou 'carne de pato' são instâncias de 'carne de aves de capoeira'.
-Contudo a interpretação de cada linha de um bloco (referente à descrição de um determinado 'domínio') depende totalmente da linha cabeçãlho que inica cada bloco e que é da forma 
+Contudo a interpretação de cada linha de um bloco (referente à descrição de um determinado 'domínio') depende totalmente da linha cabeçãlho que inica cada bloco e que é da forma
 
-       \item the(dom=>NOME-DO-DOMINIO)(syn:REL)
-
-
-
-\end{description}
-
+\begin{verbatim}
+the(dom=>NOME-DO-DOMINIO)(syn:REL)
+\end{verbatim}
 
 \section*{Estrutura do Relatório} \
 explicar como está organizado o documento, referindo os capítulos existentes em~\cite{Pereira201635}
@@ -130,7 +125,22 @@ as conclusões e o trabalho futuro
 
 \chapter{Concepção/desenho da Resolução}
 \section{Estruturas de Dados}
+Como estrutura de dados para guardar a informção lida utilizamos dicionários de dicionários.
+A ordem das chaves para cada dicionário é domínio, termo base, relação, alternativa.
+
 \section{Algoritmos}
+A resolução é dividida em duas partes: processamento do ficheiro de entrada e geração das páginas HTML.
+
+\subsection{Processar o ficheiro de entrada}
+Primeiro removemos comentários da linha, se existirem.
+De seguida, se a linha for um cabeçalho, extraímos o domínio e a sintaxe a usar para o bloco que se segue.
+Caso o domínio seja vazio, assumimos um domínio universal.
+Se a linha não for um cabeçalho, lemos os campos e guardá-mo-los na estrutura acima descrita.
+
+\subsection{Gerar as páginas HTML}
+Para gerar as páginas HTML percorremos a estrutura criada pelo processamento.
+Para as páginas de domínio, para cada domínio, criamos uma lista com todos os termos base, em que cada termo base tem uma lista com as relações, e cada relação tem uma lista de alternativas.
+Para as páginas de tradução, percorremos os domínios, os termos base, e as alternativas, criando uma lista de alternativas para cada termo base.
 
 \chapter{Codificação e Testes}
 \section{Alternativas, Decisões e Problemas de Implementação}
@@ -162,38 +172,9 @@ public class Aula()
   }
 \end{verbatim}
 
-\begin{verbatim}
-llll sanjdb c kjnjcnjnjj mmmmmmmmmmmmm hhhhhhhhhhhhhhhhhhhhhhhh jjjjjjjjjjjjjjjjjjjjjjjjjjjj kkkkkkkkkkkkkkkkkk
-      aqui deve aparecer o código do programa,
-      tal como está formato no ficheiro-fonte "darius.java"
-      caso indesejável $\varepsilon$
-\end{verbatim}
-
-\begin{lstlisting}[caption={Exemplo de uma Listagem}, label={lstExe1}]
-llll sanjdb c kjnjcnjnjj mmmmmmmmmmmmm hhhhhhhhhhhhhhhhhhhhhhhh jjjjjjjjjjjjjjjjjjjjjjjjjjjj kkkkkkkkkkkkkkkkkk
-      ou então aparecer aqui neste sítio um pouco de matematica $\$$
-      como alternativa ao anterior.
-      e aqui mais um teste $\varepsilon$
-\end{lstlisting}
-
 É ainda possível importar diretamente o ficheiro:
-\lstinputlisting{plfiltrobase.l} %input de um ficheiro
+\lstinputlisting{res.awk} %input de um ficheiro
 
 \bibliographystyle{alpha}
 \bibliography{relprojLayout}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-\end{document} 
+\end{document}
