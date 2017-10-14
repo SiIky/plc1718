@@ -41,8 +41,6 @@ function ler_dominio (dominio) {
 }
 
 function ler_sintax (sintax) {
-    # processar a sintax
-    sintax = $0
     sub(/^.*\(/, "", sintax)
     sub(/).*$/, "", sintax)
     return sintax
