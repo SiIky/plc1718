@@ -8,6 +8,7 @@
 
 \usepackage{url}
 \usepackage{enumerate}
+\usepackage{tasks}
 
 %\usepackage{alltt}
 %\usepackage{fancyvrb}
@@ -72,8 +73,8 @@
 
 
 %%%%\input{LPgeneralDefintions}
-\title{Processamento de Linguagens e Compiladores (3º ano de Curso de LCC)\\ \textbf{Trabalho Prático N1}\\ Relatório de Desenvolvimento}
-\author{Andre Sá\\ (A76361) \and Pedro Sá\\ (A78164) \and Zacarias Pedro\\ (numero) }
+\title{Processamento de Linguagens e Compiladores (3º ano de Curso de LCC)\\ \textbf{Processador de Thesaurus 3}\\ Relatório de Desenvolvimento}
+\author{Andre Sá\\ (A76361) \and Pedro Sá\\ (A78164) \and Zacarias Pedro\\ (E7870) }
 \date{\today}
 
 \begin{document}
@@ -89,39 +90,57 @@ Os objectivos focam-se em dominar a utilização de Expressões Regulares(padõres) 
 
 \chapter{Introdução} \label{intro}
 
-\titulo{Processador de Thesaurus 3}
-
 O ficheiro em anexo diaADia.mdic descreve numa sintaxe muito simples entradas de um Thesaurus que se pretende
 criar automaticamente. Cada linha tem 1 ou mais termos. Os termos são separados por ':' representado as relações
 entre eles (instancia, subclasse, relacionado-com, tradução, etc.) ou por '|' representando elementos alternativos, como se mostra a seguir:
 
 \begin{description}
-\item [prato principal:]  prato de peixe | prato de carne
-  \item [carne de aves de capoeira:] frango | carne de peru| carne de pato
+    \item [prato principal:]  prato de peixe | prato de carne
+    \item [carne de aves de capoeira:] frango | carne de peru| carne de pato
 \end{description}
 
 que signfia que 'prato de peixe' ou 'prato de carne' são instâncias de termo 'prato principal'  e que 'frango', 'carne de peru' ou 'carne de pato' são instâncias de 'carne de aves de capoeira'.
-Contudo a interpretação de cada linha de um bloco (referente à descrição de um determinado 'domínio') depende totalmente da linha cabeçãlho que inica cada bloco e que é da forma
+Contudo a interpretação de cada linha de um bloco (referente à descrição de um determinado 'domínio') depende totalmente da linha cabeçalho que inicia cada bloco e que é da forma
 
 \begin{verbatim}
 %the(dom=>NOME-DO-DOMINIO)(syn:REL)
 \end{verbatim}
 
-\section*{Estrutura do Relatório} \
-explicar como está organizado o documento, referindo os capítulos existentes em~\cite{Pereira201635}
-e a sua articulação explicando o conteúdo de cada um.
-No capítulo~\ref{ae} faz-se uma análise detalhada do problema proposto
-de modo a poder-se especificar  as entradas, resultados e formas de transformação.\\
-etc. \ldots\\
-No capítulo~\ref{concl} termina-se o relatório com uma síntese do que foi dito,
-as conclusões e o trabalho futuro
+`NOME-DO-DOMINIO` identifica o tema do domínio do bloco (quando nada é dito entre parêntesis considera-se que o domínio é o `universo`) e em que `Rel` pode ser: `inst` (instância); `nt` (subclasse); `bt` (superclasse); `iof` (instance-of); `has` (tem); `rt` (related-term); `EN` (tradução para inglês); `DE` (tradução para alemão); `gn-de` (género-de).\\
+\underline{Nota}: um cabeçalho pode especificar que em relação ao termo base (`syn`) mais do que uma relação será definida e nesse caso essas várias relações separam-se também por `:`. Por exemplo se o cabeçalho (para indicar que a seguir ao termo se define o seu gérnero, e as traduções para inglês e alemão) for
 
-\chapter{Análise e Especificação} \label{ae}
-\section{Descrição informal do problema}
-\section{Especificação do Requisitos}
-\subsection{Dados}
-\subsection{Pedidos}
-\subsection{Relações}
+\begin{verbatim}
+%the(dom=>NOME-DO-DOMINIO)(syn:gn-de:EN:DE)
+\end{verbatim}
+
+uma possível linha do bloco é
+
+\begin{verbatim}
+papá : m : daddy | dad : Vati | Papa | Papi
+\end{verbatim}
+
+O cabeçalho também pode ser da forma
+
+\begin{verbatim}
+%the(dom=>NOME-DO-DOMINIO)(syn=TERMO:REL)
+\end{verbatim}
+
+e neste caso o termo mais lato que figura à esquerda no inicio de cada linha (ver exemplos nas linhas anteriores) é sempre o mesmo e igual a TERMO. Por exemplo
+
+\begin{verbatim}
+%the(dom=>culinária)(syn=Molho:iof)
+Molho de Hortelã :
+Molho Balsâmico :
+Molho Bearnês :
+\end{verbatim}
+
+significa que `Molho de Hortelã`, `Molho Balsâmico` e `Molho Bearnês` são instâncias (instance-of) de `Molho`.
+Note que as linhas começadas por `\#` são comentários e devem ser ignoradas.\\
+Depois de analisar com cuidado a explicação supra e o conteúdo dos ficheiros em anexo, pretende-se que desenvolva um Processador de Texto com o GAWK para ler esses (dentro do mesmo pacote) e:
+\begin{tasks}
+    \task criar um conjunto de páginas HTML, uma para cada domínio (cujo nome deve intitular a página), que mostre os termos de entrada no thesaurus (sem repetições) associados a cada termo com ele relacionados, agrupados por tipo de relação, excluindo as relações de tradução.
+    \task criar duas outras páginas com as traduções Português-Inglês e Português-Alemão, com um par (TERMO - TRADUÇÃO) por linha.
+\end{tasks}
 
 \chapter{Concepção/desenho da Resolução}
 \section{Estruturas de Dados}
