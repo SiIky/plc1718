@@ -89,7 +89,7 @@ Os objectivos focam-se em dominar a utilização de Expressões Regulares(padõres) 
 
 \chapter{Introdução} \label{intro}
 
-\titulo{Problema: Processador de Thesaurus 3}
+\titulo{Processador de Thesaurus 3}
 
 O ficheiro em anexo diaADia.mdic descreve numa sintaxe muito simples entradas de um Thesaurus que se pretende
 criar automaticamente. Cada linha tem 1 ou mais termos. Os termos são separados por ':' representado as relações
@@ -104,7 +104,7 @@ que signfia que 'prato de peixe' ou 'prato de carne' são instâncias de termo 'pr
 Contudo a interpretação de cada linha de um bloco (referente à descrição de um determinado 'domínio') depende totalmente da linha cabeçãlho que inica cada bloco e que é da forma
 
 \begin{verbatim}
-the(dom=>NOME-DO-DOMINIO)(syn:REL)
+%the(dom=>NOME-DO-DOMINIO)(syn:REL)
 \end{verbatim}
 
 \section*{Estrutura do Relatório} \
@@ -132,47 +132,142 @@ A ordem das chaves para cada dicionário é domínio, termo base, relação, alternat
 A resolução é dividida em duas partes: processamento do ficheiro de entrada e geração das páginas HTML.
 
 \subsection{Processar o ficheiro de entrada}
-Primeiro removemos comentários da linha, se existirem.
+Primeiro removemos comentários da linha, se existirem.\\
 De seguida, se a linha for um cabeçalho, extraímos o domínio e a sintaxe a usar para o bloco que se segue.
-Caso o domínio seja vazio, assumimos um domínio universal.
+Caso o domínio seja vazio, assumimos um domínio universal.\\
 Se a linha não for um cabeçalho, lemos os campos e guardá-mo-los na estrutura acima descrita.
 
 \subsection{Gerar as páginas HTML}
-Para gerar as páginas HTML percorremos a estrutura criada pelo processamento.
-Para as páginas de domínio, para cada domínio, criamos uma lista com todos os termos base, em que cada termo base tem uma lista com as relações, e cada relação tem uma lista de alternativas.
-Para as páginas de tradução, percorremos os domínios, os termos base, e as alternativas, criando uma lista de alternativas para cada termo base.
+Para gerar as páginas HTML percorremos a estrutura criada pelo processamento.\\
+Para as páginas de domínio, criamos uma lista com todos os termos base, em que cada termo base tem uma lista com as relações, e cada relação tem uma lista de alternativas.\\
+Para as páginas de tradução, percorremos os domínios, os termos base, e as alternativas, criando uma lista de alternativas para cada termo base.\\
 
 \chapter{Codificação e Testes}
+
 \section{Alternativas, Decisões e Problemas de Implementação}
-\section{Testes realizados e Resultados}
-Mostram-se a seguir alguns testes feitos (valores introduzidos) e
-os respectivos resultados obtidos:
 
-%\VerbatimInput{teste1.txt}
+\subsection{Páginas de domínio}
 
+Uma possível escolha para organizar as listas nas páginas HTML é:
+
+\begin{verbatim}
+dominio -> relacao -> termo_base -> alternativa
+\end{verbatim}
+
+Com os blocos seguintes como exemplo, retirados do ficheiro de entrada:
+
+\begin{verbatim}
+%the()(syn:has)
+cozinha: electrodoméstico | banca | utensílio de cozinha | banco de cozinha | avental
+%the()(syn:nt)
+ferramenta: ferramenta de carpinteiro | ferramenta agrícula
+\end{verbatim}
+
+é gerada uma lista como esta:
+
+\begin{verbatim}
+* universo
+    * has
+        * cozinha
+            * avental
+            * utensílio de cozinha
+            * electrodoméstico
+            * banco de cozinha
+            * banca
+    * nt
+        * ferramenta
+            * ferramenta agrícula
+            * ferramenta de carpinteiro
+\end{verbatim}
+
+Esta lista, mesmo sendo correcta e mostrar as relações certas entre os termos base e as alternativas, não é muito intuitiva ao ler.\\
+
+Por esta razão decidimos estruturar as páginas HTML da seguinte forma:
+
+\begin{verbatim}
+dominio -> termo_base -> relacao -> alternativa
+\end{verbatim}
+
+Desta forma, o exemplo acima é transformado na seguinte lista:\\
+
+\begin{verbatim}
+* universo
+    * cozinha
+        * has
+            * avental
+            * utensílio de cozinha
+            * electrodoméstico
+            * banco de cozinha
+            * banca
+    * ferramenta
+        * nt
+            * ferramenta agrícula
+            * ferramenta de carpinteiro
+\end{verbatim}
+
+para significar que tanto 'cozinha' como 'ferramenta' pertencem ao domínio 'universo', que cozinha tem ('has') 'avental' e 'banca', entre outros, e que ferramenta tem como subclasses ('nt') 'ferramenta agrícula' e 'ferramenta de carpinteiro'.\\
+
+\subsection{Páginas de tradução}
+
+Para as páginas de tradução a escolha é simples. Tendo em conta que queremos gerar páginas de tradução de português para inglês e alemão, basta guardar os termos base, e as alternativas que tenham relação 'EN' ou 'DE':
+
+\begin{verbatim}
+termo_base -> alternativa
+\end{verbatim}
+
+Tomando o seguinte bloco como exemplo:
+
+\begin{verbatim}
+%the(dom=>família)(syn:EN:bt)
+irmão : brother : parentesco
+irmã : sister : parentesco
+filha : daughter : parentesco
+filho : son : parentesco
+pai : father : parentesco
+mãe : mother : parentesco
+pais : parents : parentesco
+\end{verbatim}
+
+obtemos a seguinte lista:
+
+\begin{verbatim}
+    * irmão
+        * brother
+    * irmã
+        * sister
+    * filha
+        * daughter
+    * filho
+        * son
+    * pai
+        * father
+    * mãe
+        * mother
+    * pais
+        * parents
+\end{verbatim}
 
 \chapter{Conclusão} \label{concl}
-Síntese do Documento~\cite{Martini2016a,Hoare73a}.\\
-Estado final do projecto; Análise crítica dos resultados~\cite{Sto77a}.\\
-Trabalho futuro.
+Este trabalho foi um bom exercício de aprendizagem e práctica do `awk`.
+
+Um exemplo de uma melhoria a fazer neste programa é contar o número de relações lidas a partir dos cabeçalhos, comparar com o número de campos lidos nas linhas seguintes e fazer algo com essa informação.\\
+A seguir está um exemplo de um tal bloco e respectivas linhas que não encaixam na perfeição: no cabeçalho existem 2 campos além termo base, mas só existe 1 nas linhas que lhe seguem.
+
+\begin{verbatim}
+%the(dom=>família)(syn:EN:bt)
+vida : life
+nascimento : birth
+aniversário : birthday
+morte : death
+\end{verbatim}
+
+Graças ao `awk`, ignorar estes casos é simples, basta não fazer nada.
 
 \appendix
 \chapter{Código do Programa}
 
-Lista-se a seguir o código \antlr~\cite{Par05} do programa \darius~\cite{NPH2016a} que foi desenvolvido.
-\begin{verbatim}
-public class Aula()
-  {
-    int n, m;
-    int max(int a, int b)
-      {
-       ......
-       return(max);
-      }
-  }
-\end{verbatim}
+Lista-se a seguir o código do programa que foi desenvolvido.
 
-É ainda possível importar diretamente o ficheiro:
 \lstinputlisting{res.awk} %input de um ficheiro
 
 \bibliographystyle{alpha}
