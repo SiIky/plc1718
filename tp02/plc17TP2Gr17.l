@@ -1,7 +1,9 @@
 %{
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <time.h>
 
+#define NDEBUG
 #ifndef NDEBUG
 # define debug(ctx, msg) (fprintf(stderr, "DEBUG<%s>: %s\n", (ctx), (msg)))
 # define error(ctx, msg) (fprintf(stderr, "ERROR<%s>: %s\n", (ctx), (msg)))
@@ -12,27 +14,7 @@
 # define warn(ctx, msg)  ((void) 0)
 #endif /* NDEBUG */
 
-    struct srt_tm {
-        struct tm tm;
-        int tm_mil;
-    };
-
-    struct srt_interval {
-        struct srt_tm begin;
-        struct srt_tm end;
-    };
-
-    struct srt {
-        int id;
-        struct srt_interval interval;
-        char sub[256];
-    };
-
-struct srt srt_print_sub (struct srt srt)
-{
-    printf("%s", srt.sub);
-    return srt;
-}
+#include "srt.h"
 
 #define VEC_DATA_TYPE struct srt
 #define VEC_PREFIX srt_
@@ -50,22 +32,22 @@ struct srt srt_print_sub (struct srt srt)
 
 %%
 
-[1-9][0-9]*[ \t]*\n     {
+^[1-9][0-9]*[ \t]*\r?\n {
        if ((sscanf(yytext, "%d", &srt.id) != 1) || (id != srt.id))
            warn("INITIAL", "Unexpected ID");
 
+#ifndef NDEBUG
        fprintf(stderr, "DEBUG<INITIAL>: srt.id = %d\tid = %d\n", srt.id, id);
+#endif /* NDEBUG */
        id++;
        BEGIN SRT_INT;
 }
 
-\n                      { ; }
-.                       {
-    warn("INITIAL", "Non-digit character");
-}
+(\r)?\n                 { ; }
+.                       { warn("INITIAL", "Non-digit character"); }
 
 <SRT_INT>{
-    ([0-9]{2}:){2}[0-9]{2},[0-9]{3}\ -->\ ([0-9]{2}:){2}[0-9]{2},[0-9]{3} {
+    ^([0-9]{2}:){2}[0-9]{2},[0-9]{3}\ -->\ ([0-9]{2}:){2}[0-9]{2},[0-9]{3}\s*\r?\n {
             int r = sscanf(yytext,
                            "%02d:%02d:%02d,%03d"
                            " --> "
@@ -87,22 +69,25 @@ struct srt srt_print_sub (struct srt srt)
         BEGIN SRT_SUB;
     }
 
-    .       {
-        warn("SRT_INT", "Unexpected character on time interval");
-    }
+    .   { warn("SRT_INT", "Unexpected character"); }
 }
 
 <SRT_SUB>{
-    .+\r?\n    {
+    ^.+(\r)?\n    {
+        debug("SRT_SUB", yytext);
         strcat(srt.sub, yytext);
     }
 
-    \r?\n      {
+    ((\r)?\n)+      {
+        debug("SRT_SUB", srt.sub);
         srt_push(svec, srt);
         memset(&srt, 0, sizeof(struct srt));
         BEGIN INITIAL;
     }
+
+    . { error("SRT_SUB", "This shouldn't happen"); }
 }
+
 %%
 
 int main (int argc, char ** argv)
@@ -112,11 +97,11 @@ int main (int argc, char ** argv)
         exit(EXIT_FAILURE);
     }
 
-    for (int ai = 1; ai < argc; ai++) {
-        yyin = fopen(argv[ai], "r");
+    for (int i = 1; i < argc; i++) {
+        yyin = fopen(argv[i], "r");
 
         if (yyin == NULL) {
-            fprintf(stderr, "ERROR: could not open `%s`", argv[ai]);
+            fprintf(stderr, "ERROR<FILE>: could not open `%s`", argv[i]);
             continue;
         }
 
@@ -125,7 +110,7 @@ int main (int argc, char ** argv)
         struct srt_Vec tmp = srt_with_capacity(50);
         svec = &tmp;
 
-        debug("FILE", argv[ai]);
+        debug("FILE", argv[i]);
         debug("LEX", "Starting yylex()");
 
         yylex();
@@ -137,8 +122,11 @@ int main (int argc, char ** argv)
                srt_len(svec)
               );
 
-        srt_map(svec, srt_print_sub);
-        srt_free(svec, NULL);
+        size_t len = srt_len(svec);
+        for (size_t j = 0; j < len; j++)
+            puts(svec->ptr[j].sub);
+
+        srt_free(svec, srt_dtor);
         fclose(yyin);
     }
 
