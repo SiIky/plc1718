@@ -1,9 +1,7 @@
 %{
-#define _GNU_SOURCE
 #include <stdio.h>
-#include <time.h>
+#include <string.h>
 
-#define NDEBUG
 #ifndef NDEBUG
 # define debug(ctx, msg) (fprintf(stderr, "DEBUG<%s>: %s\n", (ctx), (msg)))
 # define error(ctx, msg) (fprintf(stderr, "ERROR<%s>: %s\n", (ctx), (msg)))
@@ -16,14 +14,27 @@
 
 #include "srt.h"
 
+#define VEC_IMPLEMENTATION
 #define VEC_DATA_TYPE struct srt
 #define VEC_PREFIX srt_
 #define VEC_DATA_TYPE_EQ(L, R) ((L).id == (R).id)
 #include "vec.h"
 
+void exe1 (struct srt_Vec a, struct srt_Vec b/*, int a1, int b1, int a2, int b2*/)
+{
+    srt_map(&a, srt_print_sub);
+    srt_map(&b, srt_print_sub);
+}
+
     int id = 1; /* ID da legenda seguinte */
 
+    /* Variavel temporaria para conter um bloco SRT */
     struct srt srt;
+
+    /*
+     * Apontador para o vector actual, onde vamos guardar
+     * todos os blocos SRT de cada ficheiro
+     */
     struct srt_Vec * svec = NULL;
 %}
 
@@ -33,18 +44,27 @@
 %%
 
 ^[1-9][0-9]*[ \t]*\r?\n {
-       if ((sscanf(yytext, "%d", &srt.id) != 1) || (id != srt.id))
-           warn("INITIAL", "Unexpected ID");
+    int r = sscanf(yytext, "%d", &srt.id);
+
+    if (r != 1)
+        error("INITIAL", "Could not read ID");
+    else if (id != srt.id)
+        warn("INITIAL",
+             (id < srt.id) ?
+             "ID is higher than expected" :
+             "ID is lower than expected"
+            );
 
 #ifndef NDEBUG
-       fprintf(stderr, "DEBUG<INITIAL>: srt.id = %d\tid = %d\n", srt.id, id);
+    fprintf(stderr, "DEBUG<INITIAL>: srt.id = %d\tid = %d\n", srt.id, id);
 #endif /* NDEBUG */
-       id++;
-       BEGIN SRT_INT;
+
+    id++;
+    BEGIN SRT_INT;
 }
 
-(\r)?\n                 { ; }
-.                       { warn("INITIAL", "Non-digit character"); }
+\r?\n { ; }
+.     { warn("INITIAL", "Non-digit character"); }
 
 <SRT_INT>{
     ^([0-9]{2}:){2}[0-9]{2},[0-9]{3}\ -->\ ([0-9]{2}:){2}[0-9]{2},[0-9]{3}\s*\r?\n {
@@ -73,13 +93,12 @@
 }
 
 <SRT_SUB>{
-    ^.+(\r)?\n    {
+    ^.+\r?\n    {
         debug("SRT_SUB", yytext);
         strcat(srt.sub, yytext);
     }
 
-    ((\r)?\n)+      {
-        debug("SRT_SUB", srt.sub);
+    \r?\n       {
         srt_push(svec, srt);
         memset(&srt, 0, sizeof(struct srt));
         BEGIN INITIAL;
@@ -97,6 +116,9 @@ int main (int argc, char ** argv)
         exit(EXIT_FAILURE);
     }
 
+    /* Um array com os vectores de cada ficheiro */
+    struct srt_Vec tmp[2];
+
     for (int i = 1; i < argc; i++) {
         yyin = fopen(argv[i], "r");
 
@@ -106,9 +128,14 @@ int main (int argc, char ** argv)
         }
 
         id = 1;
+        /* Limpar a variavel temporaria */
         memset(&srt, 0, sizeof(struct srt));
-        struct srt_Vec tmp = srt_with_capacity(50);
-        svec = &tmp;
+
+        /* Criar um novo vector para o ficheiro que vamos ler */
+        tmp[i - 1] = srt_with_capacity(50);
+
+        /* Actualizar `svec`, usada pela `yylex()` */
+        svec = tmp + i - 1;
 
         debug("FILE", argv[i]);
         debug("LEX", "Starting yylex()");
@@ -116,19 +143,19 @@ int main (int argc, char ** argv)
         yylex();
 
         debug("LEX", "yylex() over");
+
+#ifndef NDEBUG
         printf("srt->cap = %zu\n"
                "srt->len = %zu\n",
                srt_capacity(svec),
                srt_len(svec)
               );
+#endif /* NDEBUG */
 
-        size_t len = srt_len(svec);
-        for (size_t j = 0; j < len; j++)
-            puts(svec->ptr[j].sub);
-
-        srt_free(svec, srt_dtor);
         fclose(yyin);
     }
+
+    exe1(tmp[0], tmp[1]);
 
     return EXIT_SUCCESS;
 }
