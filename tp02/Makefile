@@ -17,7 +17,7 @@ $(EXEC): plc17TP2Gr17.l $(SRC) $(HEADER)
 	cc -Wall -Wextra -g -o $(EXEC) $(OBJ)
 
 test: $(EXEC)
-	./$(EXEC) harry_potter-fr1.srt harry_potter-pt1.srt 2>&1 | less
+	./$(EXEC) harry_potter-fr1.srt harry_potter-pt1.srt 1 4 2>&1 | less
 
 zip: $(FICHEIROS)
 	zip -r -n: -9 plc17TP2Gr17.zip $(FICHEIROS)
