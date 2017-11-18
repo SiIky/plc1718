@@ -12,7 +12,9 @@
 #define VEC_DATA_TYPE_EQ(L, R) ((L).id == (R).id)
 #include "vec.h"
 
-#include "exe1.h"
+extern int id;
+extern struct srt srt;
+extern struct srt_Vec * svec;
 
 struct srt_tm diff2srt_tm (double diff)
 {
@@ -90,13 +92,16 @@ void exe1 (struct srt_Vec a, struct srt_Vec b, int a1, int b1)
 
 int main (int argc, char ** argv)
 {
+    int ret = EXIT_SUCCESS;
     if (argc < 5) {
         fprintf(stderr, "usage `%s FILENAME`\n", argv[0]);
-        exit(EXIT_FAILURE);
+        ret = EXIT_FAILURE;
+        goto out;
     }
 
     /* Um array com os vectores de cada ficheiro */
     struct srt_Vec tmp[2];
+    tmp[0].ptr = tmp[1].ptr = NULL;
 
     for (int i = 1; i < 3; i++) {
         yyin = fopen(argv[i], "r");
@@ -135,9 +140,18 @@ int main (int argc, char ** argv)
     }
 
     int i3, i4;
-    sscanf(argv[3], "%d", &i3);
-    sscanf(argv[4], "%d", &i4);
+
+    if (sscanf(argv[3], "%d", &i3) != 1
+        || sscanf(argv[4], "%d", &i4) != 1) {
+        ret = EXIT_FAILURE;
+        goto out;
+    }
+
     exe1(tmp[0], tmp[1], i3, i4);
 
-    return EXIT_SUCCESS;
+out:
+    for (int i = 0; i < 2; i++)
+        srt_free(tmp + i, NULL);
+
+    return ret;
 }
