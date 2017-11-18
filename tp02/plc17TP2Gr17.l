@@ -86,7 +86,9 @@
     }
 
     \r?\n       {
-        srt_push(svec, srt);
+        if (!srt_push(svec, srt))
+            error("SRT_SUB", "Could not save SRT block");
+
         memset(&srt, 0, sizeof(struct srt));
         BEGIN INITIAL;
     }
