@@ -20,6 +20,5 @@ struct srt {
 };
 
 struct srt srt_print_sub (struct srt srt);
-struct srt srt_dtor (struct srt srt);
 
 #endif /* _SRT_H */

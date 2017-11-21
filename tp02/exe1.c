@@ -4,17 +4,37 @@
 
 #define NDEBUG
 #include "debug.h"
+#undef NDEBUG
 
 #include "srt.h"
 
-#define VEC_DATA_TYPE struct srt
-#define VEC_PREFIX srt_
-#define VEC_DATA_TYPE_EQ(L, R) ((L).id == (R).id)
-#include "vec.h"
+#include "srt_vec.h"
 
 extern int id;
 extern struct srt srt;
 extern struct srt_Vec * svec;
+
+struct srt srt_print (struct srt srt)
+{
+    printf(
+        "%d\n"
+        "%02d:%02d:%02d,%03d"
+        " --> "
+        "%02d:%02d:%02d,%03d\n"
+        "%s\n",
+        srt.id,
+        srt.interval.begin.tm.tm_hour,
+        srt.interval.begin.tm.tm_min,
+        srt.interval.begin.tm.tm_sec,
+        srt.interval.begin.tm_mil,
+        srt.interval.end.tm.tm_hour,
+        srt.interval.end.tm.tm_min,
+        srt.interval.end.tm.tm_sec,
+        srt.interval.end.tm_mil,
+        srt.sub
+        );
+    return srt;
+}
 
 struct srt_tm diff2srt_tm (double diff)
 {
@@ -76,8 +96,8 @@ void exe1 (struct srt_Vec a, struct srt_Vec b, int a1, int b1)
     struct srt na = srt_get_nth(&a, ai);
     struct srt nb = srt_get_nth(&b, bi);
 
-    time_t ta = mktime((struct tm *)(void *)&na.interval.begin);
-    time_t tb = mktime((struct tm *)(void *)&nb.interval.begin);
+    time_t ta = mktime(&na.interval.begin.tm);
+    time_t tb = mktime(&nb.interval.begin.tm);
 
     struct srt_tm diff_tm = diff2srt_tm(difftime(ta, tb));
 
@@ -87,28 +107,31 @@ void exe1 (struct srt_Vec a, struct srt_Vec b, int a1, int b1)
         b.ptr[i].interval.end = srt_tm_add(b.ptr[i].interval.end, diff_tm);
     }
 
-    srt_map(&b, srt_print_sub);
+    srt_map(&b, srt_print);
 }
 
 int main (int argc, char ** argv)
 {
     int ret = EXIT_SUCCESS;
-    if (argc < 5) {
-        fprintf(stderr, "usage `%s FILENAME`\n", argv[0]);
+    if (argc != 5) {
+        fprintf(stderr, "usage `%s SRTA SRTB IDA IDB`\n", argv[0]);
         ret = EXIT_FAILURE;
         goto out;
     }
 
     /* Um array com os vectores de cada ficheiro */
-    struct srt_Vec tmp[2];
-    tmp[0].ptr = tmp[1].ptr = NULL;
+    struct srt_Vec tmp[2] = {
+        [0] = srt_new(),
+        [1] = srt_new(),
+    };
 
     for (int i = 1; i < 3; i++) {
         yyin = fopen(argv[i], "r");
 
         if (yyin == NULL) {
             fprintf(stderr, "ERROR<FILE>: could not open `%s`", argv[i]);
-            continue;
+            ret = EXIT_FAILURE;
+            goto out;
         }
 
         id = 1;
@@ -128,7 +151,7 @@ int main (int argc, char ** argv)
 
         debug("LEX", "yylex() over");
 
-#ifndef NDEBUG
+#if 0 //ndef NDEBUG
         printf("srt->cap = %zu\n"
                "srt->len = %zu\n",
                srt_capacity(svec),
