@@ -1,0 +1,290 @@
+%
+% Layout retirado de http://www.di.uminho.pt/~prh/curplc09.html#notas
+%
+\documentclass{report}
+\usepackage[portuges]{babel}
+\usepackage[utf8]{inputenc}
+%\usepackage[latin1]{inputenc}
+
+\usepackage{url}
+\usepackage{enumerate}
+\usepackage{tasks}
+\usepackage{graphicx}           %package para utilizar imagens em latex
+\graphicspath{ {images/} }      %folder onde tem as imagens
+
+%\usepackage{alltt}
+%\usepackage{fancyvrb}
+\usepackage{listings}
+%LISTING - GENERAL
+\lstset{
+    basicstyle=\small,
+    numbers=left,
+    numberstyle=\tiny,
+    numbersep=5pt,
+    breaklines=true,
+    frame=tB,
+    mathescape=true,
+    escapeinside={(*@}{@*)}
+    }
+%
+%\lstset{ %
+%   language=Flex,                          % choose the language of the code
+%   basicstyle=\ttfamily\footnotesize,      % the size of the fonts that are used for the code
+%   keywordstyle=\bfseries,                 % set the keyword style
+%   %numbers=left,                          % where to put the line-numbers
+%   numberstyle=\scriptsize,                % the size of the fonts that are used for the line-numbers
+%   stepnumber=2,                           % the step between two line-numbers. If it's 1 each line
+%                                           % will be numbered
+%   numbersep=5pt,                          % how far the line-numbers are from the code
+%   backgroundcolor=\color{white},          % choose the background color. You must add \usepackage{color}
+%   showspaces=false,                       % show spaces adding particular underscores
+%   showstringspaces=false,                 % underline spaces within strings
+%   showtabs=false,                         % show tabs within strings adding particular underscores
+%   frame=none,                             % adds a frame around the code
+%   %abovecaptionskip=-.8em,
+%   %belowcaptionskip=.7em,
+%   tabsize=2,                              % sets default tabsize to 2 spaces
+%   captionpos=b,                           % sets the caption-position to bottom
+%   breaklines=true,                        % sets automatic line breaking
+%   breakatwhitespace=false,                % sets if automatic breaks should only happen at whitespace
+%   title=\lstname,                         % show the filename of files included with \lstinputlisting;
+%                                           % also try caption instead of title
+%   escapeinside={\%*}{*)},                 % if you want to add a comment within your code
+%   morekeywords={*,...}                    % if you want to add more keywords to the set
+%}
+
+\usepackage{xspace}
+
+\parindent=0pt
+\parskip=2pt
+
+\setlength{\oddsidemargin}{-1cm}
+\setlength{\textwidth}{18cm}
+\setlength{\headsep}{-1cm}
+\setlength{\textheight}{23cm}
+
+\def\darius{\textsf{Darius}\xspace}
+\def\antlr{\texttt{AnTLR}\xspace}
+\def\pe{\emph{Filtros de Texto(GAWK)}\xspace}
+
+\def\titulo#1{\section{#1}}
+\def\super#1{{\em Supervisor: #1}\\ }
+\def\area#1{{\em \'{A}rea: #1}\\[0.2cm]}
+\def\resumo{\underline{Resumo}:\\ }
+
+%%%%\input{LPgeneralDefintions}
+\title{Processamento de Linguagens e Compiladores (3º ano de Curso de LCC)\\ \textbf{Sincronizador de Legendas}\\ Relatório de Desenvolvimento}
+\author{Andre Sá\\ (A76361) \and Pedro Sá\\ (A78164) \and Zacarias Pedro\\ (E7870) }
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este relatório debruça-se sobre o estudo de filtros de texto, em específico, o gerador de análise léxica Flex juntamente com outro parser, este baseado em gramática, o Yacc de forma a filtrar e/ou transformar o conteúdo de textos.
+Os objectivos focam-se em reforçar o domínio da utilização de Expressões Regulares(padõres) e de gramáticas com o objectivo de extrair/filtrar/transformar o conteúdo de texto.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introdução} \label{intro}
+O seguinte extracto de legendas formato srt tem o seguinte formato:
+ 
+ \includegraphics[scale=0.5]{srt}
+
+As linhas 4, 8, 13, 17 contêm os identificadores de legenda. As linhas 5, 9, 14, 18 contêm os tempos de íninio e desaparecimento de legenda.
+As legendas são separadas por linha em branco. Considere ainda que dispomos lengendas do mesmo filme em várias línguas, mas que frequentemente diferem no tempo inicial e duração de filme.
+
+\begin{enumerate}[1.]
+    \item Construa um sincronizador de legendas: 
+        \begin{verbatim} 
+        srtsync a.srt b.srt a1 b1 a2 b2 > b-sync.srt 
+        \end{verbatim}
+        que recalcula os tempos de entrada e de saída das legendas de b.srt de modo que as legendas com números b1 e b2 de b fiquem com as entradas sincronizadas respectivamente com a1 e a2 de a.
+
+    \item Construa um processador de srt que: 
+        \begin{itemize}  
+            \item{retire os identificadores de legenda.}  
+            \item{coloque as legendas numa unica linha juntando-as com "|"}
+            \item{marque com traço horizontal os intervalos com mais de 2 segundos de silêncio.}  
+        \end{itemize}
+        \begin{verbatim}
+
+        00:00:53,328 --> 00:00:56,014 Eu sei, mas quero fazer um turno.
+        00:00:56,014 --> 00:01:06,485 =================================
+        00:00:53,328 --> 00:00:56,014 Você gosta dele, não? | Gosta de observá-lo.
+        \end{verbatim}
+\end{enumerate}
+
+
+
+\chapter{Análise e Especificação} \label{ae}
+
+\section{Descrição informal do problema}
+Tendo por base o enunciado referido acima e tendo em foco o objectivo de desenvolver algo útil no contexto do problem. Em grupo, decidiu-se que se deveria mudar o problema da primeira alinea. 
+Então em vez de só recalcular o tempo de uma legenda por base de outra, decidiu-se recalcular o tempo de todas as legendas do segundo documento, tempo que é obtido através da diferença de tempo entre uma legenda do primeiro ficheiro(o utilizador escolhe o id da legenda) e outra legenda do segundo ficheiro.  
+
+\begin{verbatim}
+srtsync a.srt b.srt a1 b1 > b-sync.srt 
+\end{verbatim}
+
+
+
+\section{Especificação do Requisitos}
+
+\subsection{Dados}
+\subsection{Pedidos}
+\subsection{Relações}
+
+
+\chapter{Concepção/desenho da Resolução}
+\section{Estruturas de Dados}
+Como estrutura de dados para guardar a informção lida utilizamos dicionários de dicionários.
+A ordem das chaves para cada dicionário é domínio, termo base, relação, alternativa.
+
+\section{Algoritmos}
+A resolução é dividida em duas partes: processamento do ficheiro de entrada e geração das páginas HTML.
+
+\subsection{Processar o ficheiro de entrada}
+Primeiro removemos comentários da linha, se existirem.\\
+De seguida, se a linha for um cabeçalho, extraímos o domínio e a sintaxe a usar para o bloco que se segue.
+Caso o domínio seja vazio, assumimos um domínio universal.\\
+Se a linha não for um cabeçalho, lemos os campos e guardá-mo-los na estrutura acima descrita.
+
+\subsection{Gerar as páginas HTML}
+Para gerar as páginas HTML percorremos a estrutura criada pelo processamento.\\
+Para as páginas de domínio, criamos uma lista com todos os termos base, em que cada termo base tem uma lista com as relações, e cada relação tem uma lista de alternativas.\\
+Para as páginas de tradução, percorremos os domínios, os termos base, e as alternativas, criando uma lista de alternativas para cada termo base.\\
+
+\chapter{Codificação e Testes}
+
+\section{Alternativas, Decisões e Problemas de Implementação}
+
+\subsection{Páginas de domínio}
+
+Uma possível escolha para organizar as listas nas páginas HTML é:
+
+\begin{verbatim}
+dominio -> relacao -> termo_base -> alternativa
+\end{verbatim}
+
+Com os blocos seguintes como exemplo, retirados do ficheiro de entrada:
+
+\begin{verbatim}
+%the()(syn:has)
+cozinha: electrodoméstico | banca | utensílio de cozinha | banco de cozinha | avental
+%the()(syn:nt)
+ferramenta: ferramenta de carpinteiro | ferramenta agrícula
+\end{verbatim}
+
+é gerada uma lista como esta:
+
+\begin{verbatim}
+* universo
+    * has
+        * cozinha
+            * avental
+            * utensílio de cozinha
+            * electrodoméstico
+            * banco de cozinha
+            * banca
+    * nt
+        * ferramenta
+            * ferramenta agrícula
+            * ferramenta de carpinteiro
+\end{verbatim}
+
+Esta lista, mesmo sendo correcta e mostrar as relações certas entre os termos base e as alternativas, não é muito intuitiva ao ler.\\
+
+Por esta razão decidimos estruturar as páginas HTML da seguinte forma:
+
+\begin{verbatim}
+dominio -> termo_base -> relacao -> alternativa
+\end{verbatim}
+
+Desta forma, o exemplo acima é transformado na seguinte lista:\\
+
+\begin{verbatim}
+* universo
+    * cozinha
+        * has
+            * avental
+            * utensílio de cozinha
+            * electrodoméstico
+            * banco de cozinha
+            * banca
+    * ferramenta
+        * nt
+            * ferramenta agrícula
+            * ferramenta de carpinteiro
+\end{verbatim}
+
+para significar que tanto 'cozinha' como 'ferramenta' pertencem ao domínio 'universo', que cozinha tem ('has') 'avental' e 'banca', entre outros, e que ferramenta tem como subclasses ('nt') 'ferramenta agrícula' e 'ferramenta de carpinteiro'.\\
+
+\subsection{Páginas de tradução}
+
+Para as páginas de tradução a escolha é simples. Tendo em conta que queremos gerar páginas de tradução de português para inglês e alemão, basta guardar os termos base, e as alternativas que tenham relação 'EN' ou 'DE':
+
+\begin{verbatim}
+termo_base -> alternativa
+\end{verbatim}
+
+Tomando o seguinte bloco como exemplo:
+
+\begin{verbatim}
+%the(dom=>família)(syn:EN:bt)
+irmão : brother : parentesco
+irmã : sister : parentesco
+filha : daughter : parentesco
+filho : son : parentesco
+pai : father : parentesco
+mãe : mother : parentesco
+pais : parents : parentesco
+\end{verbatim}
+
+obtemos a seguinte lista:
+
+\begin{verbatim}
+    * irmão
+        * brother
+    * irmã
+        * sister
+    * filha
+        * daughter
+    * filho
+        * son
+    * pai
+        * father
+    * mãe
+        * mother
+    * pais
+        * parents
+\end{verbatim}
+
+\chapter{Conclusão} \label{concl}
+Este trabalho foi um bom exercício de aprendizagem e práctica do `awk`.
+
+Um exemplo de uma melhoria a fazer neste programa é contar o número de relações lidas a partir dos cabeçalhos, comparar com o número de campos lidos nas linhas seguintes e fazer algo com essa informação.\\
+A seguir está um exemplo de um tal bloco e respectivas linhas que não encaixam na perfeição: no cabeçalho existem 2 campos além termo base, mas só existe 1 nas linhas que lhe seguem.
+
+\begin{verbatim}
+%the(dom=>família)(syn:EN:bt)
+vida : life
+nascimento : birth
+aniversário : birthday
+morte : death
+\end{verbatim}
+
+Graças ao `awk`, ignorar estes casos é simples, basta não fazer nada.
+
+\appendix
+\chapter{Código do Programa}
+
+Lista-se a seguir o código do programa que foi desenvolvido.
+
+%\lstinputlisting{plc17TP1Gr17.awk} %input de um ficheiro
+
+\bibliographystyle{alpha}
+\bibliography{relprojLayout}
+\end{document}
