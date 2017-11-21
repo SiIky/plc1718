@@ -54,7 +54,6 @@ struct srt srt_print (struct srt ret)
         ret.interval.end.tm_mil,
         ret.sub
         );
-    fflush(NULL);
     return ret;
 }
 

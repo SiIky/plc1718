@@ -4,6 +4,7 @@ SRC=exe1.c exe2.c
 OBJ=$(EXEC).flex.o
 
 FICHEIROS=Makefile \
+	  plc17TP2Gr17.tex \
 	  harry_potter-fr1.srt \
 	  harry_potter-pt1.srt \
 	  plc17TP2Gr17.l \
@@ -29,6 +30,9 @@ test1: $(EXEC)
 
 test2: $(EXEC)
 	./$(EXEC)2 harry_potter-pt1.srt 2>&1 | less
+
+tex:
+	pdflatex plc17TP2Gr17.tex
 
 zip: $(FICHEIROS)
 	zip -r -n: -9 plc17TP2Gr17.zip $(FICHEIROS)

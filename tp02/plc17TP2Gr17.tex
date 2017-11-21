@@ -24,9 +24,9 @@
     breaklines=true,
     frame=tB,
     mathescape=true,
-    escapeinside={(*@}{@*)}
+    escapeinside={(*@}{@*)},
     }
-%
+
 %\lstset{ %
 %   language=Flex,                          % choose the language of the code
 %   basicstyle=\ttfamily\footnotesize,      % the size of the fonts that are used for the code
@@ -90,24 +90,42 @@ Os objectivos focam-se em reforçar o domínio da utilização de Expressões Re
 
 \chapter{Introdução} \label{intro}
 O seguinte extracto de legendas formato srt tem o seguinte formato:
- 
- \includegraphics[scale=0.5]{srt}
 
-As linhas 4, 8, 13, 17 contêm os identificadores de legenda. As linhas 5, 9, 14, 18 contêm os tempos de íninio e desaparecimento de legenda.
+\begin{verbatim}
+1    1
+2    00:00:48,344 --> 00:00:48,500
+3    Chamada: recebida
+4
+5    2
+6    00:00:49,707 --> 00:00:53,128
+7    -Está tudo pronto?
+8    -Você não tinha de me substituir.
+9
+10   3
+11   00:00:53,328 --> 00:00:56,014
+12   Eu sei, mas quero fazer um turno.
+13
+14   4
+15   00:01:06,485 --> 00:01:08,943
+16   Você gosta dele, não?
+17   Gosta de observá-lo.
+\end{verbatim}
+
+As linhas 1, 5, 10, 14 contêm os identificadores de legenda. As linhas 2, 6, 11, 15 contêm os tempos de início e desaparecimento de legenda.
 As legendas são separadas por linha em branco. Considere ainda que dispomos lengendas do mesmo filme em várias línguas, mas que frequentemente diferem no tempo inicial e duração de filme.
 
 \begin{enumerate}[1.]
-    \item Construa um sincronizador de legendas: 
-        \begin{verbatim} 
-        srtsync a.srt b.srt a1 b1 a2 b2 > b-sync.srt 
+    \item Construa um sincronizador de legendas:
+        \begin{verbatim}
+        exe1 a.srt b.srt a1 b1 a2 b2 > b-sync.srt
         \end{verbatim}
         que recalcula os tempos de entrada e de saída das legendas de b.srt de modo que as legendas com números b1 e b2 de b fiquem com as entradas sincronizadas respectivamente com a1 e a2 de a.
 
-    \item Construa um processador de srt que: 
-        \begin{itemize}  
-            \item{retire os identificadores de legenda.}  
-            \item{coloque as legendas numa unica linha juntando-as com "|"}
-            \item{marque com traço horizontal os intervalos com mais de 2 segundos de silêncio.}  
+    \item Construa um processador de srt que:
+        \begin{itemize}
+            \item retire os identificadores de legenda.
+            \item coloque as legendas numa unica linha juntando-as com "|"
+            \item marque com traço horizontal os intervalos com mais de 2 segundos de silêncio.
         \end{itemize}
         \begin{verbatim}
 
@@ -117,150 +135,42 @@ As legendas são separadas por linha em branco. Considere ainda que dispomos len
         \end{verbatim}
 \end{enumerate}
 
-
-
 \chapter{Análise e Especificação} \label{ae}
 
 \section{Descrição informal do problema}
-Tendo por base o enunciado referido acima e tendo em foco o objectivo de desenvolver algo útil no contexto do problem. Em grupo, decidiu-se que se deveria mudar o problema da primeira alinea. 
-Então em vez de só recalcular o tempo de uma legenda por base de outra, decidiu-se recalcular o tempo de todas as legendas do segundo documento, tempo que é obtido através da diferença de tempo entre uma legenda do primeiro ficheiro(o utilizador escolhe o id da legenda) e outra legenda do segundo ficheiro.  
+Tendo por base o enunciado referido acima e tendo em foco o objectivo de desenvolver algo útil no contexto do problem. Em grupo, decidiu-se que se deveria mudar o problema da primeira alinea.
+Então em vez de só recalcular o tempo de uma legenda por base de outra, decidiu-se recalcular o tempo de todas as legendas do segundo documento, tempo que é obtido através da diferença de tempo entre uma legenda do primeiro ficheiro(o utilizador escolhe o id da legenda) e outra legenda do segundo ficheiro.
 
 \begin{verbatim}
-srtsync a.srt b.srt a1 b1 > b-sync.srt 
+exe1 a.srt b.srt a1 b1 > b-sync.srt
 \end{verbatim}
-
-
-
-\section{Especificação do Requisitos}
-
-\subsection{Dados}
-\subsection{Pedidos}
-\subsection{Relações}
-
 
 \chapter{Concepção/desenho da Resolução}
 \section{Estruturas de Dados}
-Como estrutura de dados para guardar a informção lida utilizamos dicionários de dicionários.
-A ordem das chaves para cada dicionário é domínio, termo base, relação, alternativa.
+
+Como a estrutura `struct tm` da stdlib de C não contém milisegundos, e para o nosso trabalho são precisos milisegundos, criamos uma nova estrutura com milisegundos.
+\lstinputlisting[firstnumber=6,linerange={6-9}]{srt.h} %input de um ficheiro
+
+Esta estrutura representa um intervalo de tempo.
+\lstinputlisting[firstnumber=11,linerange={11-14}]{srt.h} %input de um ficheiro
+
+Esta estrutura representa um bloco SRT, constituindo o ID da legenda, um intervalo de tempo e a legenda.
+\lstinputlisting[firstnumber=16,linerange={16-20}]{srt.h} %input de um ficheiro
+
+Esta estrutura representa um vector dinámico, para conter todos os blocos SRT de um ficheiro `.srt`.
+\lstinputlisting[firstnumber=92,linerange={92-92,94-94,96-96,98-99}]{vec.h} %input de um ficheiro
 
 \section{Algoritmos}
-A resolução é dividida em duas partes: processamento do ficheiro de entrada e geração das páginas HTML.
 
-\subsection{Processar o ficheiro de entrada}
-Primeiro removemos comentários da linha, se existirem.\\
-De seguida, se a linha for um cabeçalho, extraímos o domínio e a sintaxe a usar para o bloco que se segue.
-Caso o domínio seja vazio, assumimos um domínio universal.\\
-Se a linha não for um cabeçalho, lemos os campos e guardá-mo-los na estrutura acima descrita.
+\subsection{Processar o(s) ficheiro(s) de entrada}
 
-\subsection{Gerar as páginas HTML}
-Para gerar as páginas HTML percorremos a estrutura criada pelo processamento.\\
-Para as páginas de domínio, criamos uma lista com todos os termos base, em que cada termo base tem uma lista com as relações, e cada relação tem uma lista de alternativas.\\
-Para as páginas de tradução, percorremos os domínios, os termos base, e as alternativas, criando uma lista de alternativas para cada termo base.\\
+No analisador léxico existem 3 condições de contexto, correspondentes ao ID (`SRT\_ID`), intervalo de tempo (`SRT\_INT`), e a legenda (`SRT\_SUB`).\\
+Nas `SRT\_ID` e `SRT\_INT` não há muito a dizer.\\
+Na `SRT\_SUB` vamos concatenando o texto lido para uma string
 
 \chapter{Codificação e Testes}
 
 \section{Alternativas, Decisões e Problemas de Implementação}
-
-\subsection{Páginas de domínio}
-
-Uma possível escolha para organizar as listas nas páginas HTML é:
-
-\begin{verbatim}
-dominio -> relacao -> termo_base -> alternativa
-\end{verbatim}
-
-Com os blocos seguintes como exemplo, retirados do ficheiro de entrada:
-
-\begin{verbatim}
-%the()(syn:has)
-cozinha: electrodoméstico | banca | utensílio de cozinha | banco de cozinha | avental
-%the()(syn:nt)
-ferramenta: ferramenta de carpinteiro | ferramenta agrícula
-\end{verbatim}
-
-é gerada uma lista como esta:
-
-\begin{verbatim}
-* universo
-    * has
-        * cozinha
-            * avental
-            * utensílio de cozinha
-            * electrodoméstico
-            * banco de cozinha
-            * banca
-    * nt
-        * ferramenta
-            * ferramenta agrícula
-            * ferramenta de carpinteiro
-\end{verbatim}
-
-Esta lista, mesmo sendo correcta e mostrar as relações certas entre os termos base e as alternativas, não é muito intuitiva ao ler.\\
-
-Por esta razão decidimos estruturar as páginas HTML da seguinte forma:
-
-\begin{verbatim}
-dominio -> termo_base -> relacao -> alternativa
-\end{verbatim}
-
-Desta forma, o exemplo acima é transformado na seguinte lista:\\
-
-\begin{verbatim}
-* universo
-    * cozinha
-        * has
-            * avental
-            * utensílio de cozinha
-            * electrodoméstico
-            * banco de cozinha
-            * banca
-    * ferramenta
-        * nt
-            * ferramenta agrícula
-            * ferramenta de carpinteiro
-\end{verbatim}
-
-para significar que tanto 'cozinha' como 'ferramenta' pertencem ao domínio 'universo', que cozinha tem ('has') 'avental' e 'banca', entre outros, e que ferramenta tem como subclasses ('nt') 'ferramenta agrícula' e 'ferramenta de carpinteiro'.\\
-
-\subsection{Páginas de tradução}
-
-Para as páginas de tradução a escolha é simples. Tendo em conta que queremos gerar páginas de tradução de português para inglês e alemão, basta guardar os termos base, e as alternativas que tenham relação 'EN' ou 'DE':
-
-\begin{verbatim}
-termo_base -> alternativa
-\end{verbatim}
-
-Tomando o seguinte bloco como exemplo:
-
-\begin{verbatim}
-%the(dom=>família)(syn:EN:bt)
-irmão : brother : parentesco
-irmã : sister : parentesco
-filha : daughter : parentesco
-filho : son : parentesco
-pai : father : parentesco
-mãe : mother : parentesco
-pais : parents : parentesco
-\end{verbatim}
-
-obtemos a seguinte lista:
-
-\begin{verbatim}
-    * irmão
-        * brother
-    * irmã
-        * sister
-    * filha
-        * daughter
-    * filho
-        * son
-    * pai
-        * father
-    * mãe
-        * mother
-    * pais
-        * parents
-\end{verbatim}
 
 \chapter{Conclusão} \label{concl}
 Este trabalho foi um bom exercício de aprendizagem e práctica do `awk`.
@@ -268,22 +178,13 @@ Este trabalho foi um bom exercício de aprendizagem e práctica do `awk`.
 Um exemplo de uma melhoria a fazer neste programa é contar o número de relações lidas a partir dos cabeçalhos, comparar com o número de campos lidos nas linhas seguintes e fazer algo com essa informação.\\
 A seguir está um exemplo de um tal bloco e respectivas linhas que não encaixam na perfeição: no cabeçalho existem 2 campos além termo base, mas só existe 1 nas linhas que lhe seguem.
 
-\begin{verbatim}
-%the(dom=>família)(syn:EN:bt)
-vida : life
-nascimento : birth
-aniversário : birthday
-morte : death
-\end{verbatim}
-
-Graças ao `awk`, ignorar estes casos é simples, basta não fazer nada.
 
 \appendix
 \chapter{Código do Programa}
 
 Lista-se a seguir o código do programa que foi desenvolvido.
 
-%\lstinputlisting{plc17TP1Gr17.awk} %input de um ficheiro
+\lstinputlisting{plc17TP2Gr17.l} %input de um ficheiro
 
 \bibliographystyle{alpha}
 \bibliography{relprojLayout}
