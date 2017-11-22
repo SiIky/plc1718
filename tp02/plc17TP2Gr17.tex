@@ -4,7 +4,6 @@
 \documentclass{report}
 \usepackage[portuges]{babel}
 \usepackage[utf8]{inputenc}
-%\usepackage[latin1]{inputenc}
 
 \usepackage{url}
 \usepackage{enumerate}
@@ -17,6 +16,7 @@
 \usepackage{listings}
 %LISTING - GENERAL
 \lstset{
+    language=c,                          % choose the language of the code
     basicstyle=\small,
     numbers=left,
     numberstyle=\tiny,
@@ -65,14 +65,13 @@
 
 \def\darius{\textsf{Darius}\xspace}
 \def\antlr{\texttt{AnTLR}\xspace}
-\def\pe{\emph{Filtros de Texto(GAWK)}\xspace}
 
 \def\titulo#1{\section{#1}}
 \def\super#1{{\em Supervisor: #1}\\ }
 \def\area#1{{\em \'{A}rea: #1}\\[0.2cm]}
 \def\resumo{\underline{Resumo}:\\ }
 
-%%%%\input{LPgeneralDefintions}
+%\input{LPgeneralDefintions}
 \title{Processamento de Linguagens e Compiladores (3º ano de Curso de LCC)\\ \textbf{Sincronizador de Legendas}\\ Relatório de Desenvolvimento}
 \author{Andre Sá\\ (A76361) \and Pedro Sá\\ (A78164) \and Zacarias Pedro\\ (E7870) }
 \date{\today}
@@ -82,14 +81,14 @@
 \maketitle
 
 \begin{abstract}
-Este relatório debruça-se sobre o estudo de filtros de texto, em específico, o gerador de análise léxica Flex juntamente com outro parser, este baseado em gramática, o Yacc de forma a filtrar e/ou transformar o conteúdo de textos.
-Os objectivos focam-se em reforçar o domínio da utilização de Expressões Regulares(padõres) e de gramáticas com o objectivo de extrair/filtrar/transformar o conteúdo de texto.
+Este relatório debruça-se sobre o estudo e desenvolvimento de filtros de texto, em específico, com o gerador de análise léxica Flex, de forma a filtrar e/ou transformar o conteúdo de texto.
+Os objectivos focam-se em reforçar o domínio da utilização de Expressões Regulares (padõres) e de gramáticas com o objectivo de extrair/filtrar/transformar o conteúdo de texto.
 \end{abstract}
 
 \tableofcontents
 
 \chapter{Introdução} \label{intro}
-O seguinte extracto de legendas formato srt tem o seguinte formato:
+Legendas no formato SRT têm o seguinte formato:
 
 \begin{verbatim}
 1    1
@@ -111,8 +110,8 @@ O seguinte extracto de legendas formato srt tem o seguinte formato:
 17   Gosta de observá-lo.
 \end{verbatim}
 
-As linhas 1, 5, 10, 14 contêm os identificadores de legenda. As linhas 2, 6, 11, 15 contêm os tempos de início e desaparecimento de legenda.
-As legendas são separadas por linha em branco. Considere ainda que dispomos lengendas do mesmo filme em várias línguas, mas que frequentemente diferem no tempo inicial e duração de filme.
+As linhas 1, 5, 10, 14 contêm os identificadores de legenda. As linhas 2, 6, 11, 15 contêm os tempos de início e desaparecimento de legenda. As legendas são separadas por linha em branco.\\
+Considere ainda que dispomos lengendas do mesmo filme em várias línguas, mas que frequentemente diferem no tempo inicial e duração de filme.
 
 \begin{enumerate}[1.]
     \item Construa um sincronizador de legendas:
@@ -128,63 +127,111 @@ As legendas são separadas por linha em branco. Considere ainda que dispomos len
             \item marque com traço horizontal os intervalos com mais de 2 segundos de silêncio.
         \end{itemize}
         \begin{verbatim}
-
         00:00:53,328 --> 00:00:56,014 Eu sei, mas quero fazer um turno.
         00:00:56,014 --> 00:01:06,485 =================================
-        00:00:53,328 --> 00:00:56,014 Você gosta dele, não? | Gosta de observá-lo.
+        00:00:53,328 --> 00:00:56,014 Você gosta dele, não?|Gosta de observá-lo.
         \end{verbatim}
 \end{enumerate}
 
 \chapter{Análise e Especificação} \label{ae}
 
 \section{Descrição informal do problema}
-Tendo por base o enunciado referido acima e tendo em foco o objectivo de desenvolver algo útil no contexto do problem. Em grupo, decidiu-se que se deveria mudar o problema da primeira alinea.
-Então em vez de só recalcular o tempo de uma legenda por base de outra, decidiu-se recalcular o tempo de todas as legendas do segundo documento, tempo que é obtido através da diferença de tempo entre uma legenda do primeiro ficheiro(o utilizador escolhe o id da legenda) e outra legenda do segundo ficheiro.
+
+\subsection{Sincronizador de Legendas}
+
+Tendo por base o enunciado referido acima e tendo em foco o objectivo de desenvolver algo útil no contexto do problema, em grupo, decidi-mos que se deveria alterar o problema da primeira alínea:
+fazer uma translação de todos os blocos de forma a que os tempos relativos das legendas do ficheiro `b.srt` se mantenham, mas a legenda com ID `b1` do ficheiro `b.srt` tenha o mesmo tempo de início da legenda com ID `a1` do ficheiro `a.srt`.
 
 \begin{verbatim}
 exe1 a.srt b.srt a1 b1 > b-sync.srt
 \end{verbatim}
 
+\subsection{Processador de Legendas}
+
+Esta alínea é relativamente fácil: muito resumidamente, consiste em alterar a estrutura do texto de entrada e eliminar parte da informação. Tendo uma estrutura de dados que represente completamente o formato de entrada, resolver esta alínea resume-se a criar uma função que imprima tal estrutura da forma pretendida e percorrer a estrutura aplicando esta função.
+
 \chapter{Concepção/desenho da Resolução}
+
 \section{Estruturas de Dados}
 
-Como a estrutura `struct tm` da stdlib de C não contém milisegundos, e para o nosso trabalho são precisos milisegundos, criamos uma nova estrutura com milisegundos.
-\lstinputlisting[firstnumber=6,linerange={6-9}]{srt.h} %input de um ficheiro
+Para a realização deste trabalho precisamos de trabalhar com tempos e intervalos de tempo. Para tal, decidimos usar as estruturas de dados e respectivas funções da header file `time.h`. Contudo, as estruturas disponíveis não têm representação de milissegundos. Para tal, criamos uma nova estrutura, baseada na estrutura da stdlib, com milissegundos:
+\lstinputlisting[firstnumber=6,linerange={6-9}]{srt.h}
 
-Esta estrutura representa um intervalo de tempo.
-\lstinputlisting[firstnumber=11,linerange={11-14}]{srt.h} %input de um ficheiro
+Esta estrutura representa um intervalo de tempo:
+\lstinputlisting[firstnumber=11,linerange={11-14}]{srt.h}
 
-Esta estrutura representa um bloco SRT, constituindo o ID da legenda, um intervalo de tempo e a legenda.
-\lstinputlisting[firstnumber=16,linerange={16-20}]{srt.h} %input de um ficheiro
+Esta estrutura representa um bloco SRT, constituindo o ID da legenda, um intervalo de tempo e o texto da legenda:
+\lstinputlisting[firstnumber=16,linerange={16-20}]{srt.h}
 
-Esta estrutura representa um vector dinámico, para conter todos os blocos SRT de um ficheiro `.srt`.
-\lstinputlisting[firstnumber=92,linerange={92-92,94-94,96-96,98-99}]{vec.h} %input de um ficheiro
+Para guardar ficheiros completos como um conjunto ordenado de blocos SRT, decidimos usar uma biblioteca criada por um dos elementos do grupo. Esta biblioteca define um vector dinâmico e funções para o manipular.
+Este vector é definido como a seguir se mostra:
+\lstinputlisting[firstnumber=92,linerange={92-92,94-94,96-96,98-99}]{vec.h}
+em que `VEC\_VEC` é um nome à escolha do utilizador da biblioteca, e `VEC\_DDATA\_TYPE` é um macro que expande para o tipo de dados que pretendemos guardar no vector.
 
 \section{Algoritmos}
 
 \subsection{Processar o(s) ficheiro(s) de entrada}
 
-No analisador léxico existem 3 condições de contexto, correspondentes ao ID (`SRT\_ID`), intervalo de tempo (`SRT\_INT`), e a legenda (`SRT\_SUB`).\\
-Nas `SRT\_ID` e `SRT\_INT` não há muito a dizer.\\
-Na `SRT\_SUB` vamos concatenando o texto lido para uma string
+Apesar do exercício pedir dois executáveis, criamos e usamos apenas um analisador léxico. Este lê o ficheiro de entrada na integra e guarda-o com o auxílio das estruturas acima mencionadas.
+
+Desta forma, basta criar um ponto de entrada do programa diferente, a função `main`, e funções específicas para cada problema a resolver.\\
+
+No analisador léxico existem 3 condições de contexto, `SRT\_ID`, `SRT\_INT` e `SRT\_SUB`, correspondentes, respectivamente ao ID, intervalo de tempo, e ao texto da legenda.
+
+Nas condições `SRT\_ID` e `SRT\_INT` procuramos números com o formato esperado e, se encontrados, são lidos para a estrutura e campo certos.
+
+Na condição `SRT\_SUB` concatenamos todo o texto até encontrarmos uma linha em branco, o que faz voltar à condição `SRT\_ID`.
+
+No caso de ocorrerem erros, em qualquer passo do programa, mensagens de erro/diagnóstico são impressas com uma breve descrição e, se possível, a execução continua.\\
+
+O autómato que representa o analisador léxico é o seguinte:
+
+\begin{verbatim}
+                             o ficheiro não
+                             chegou  ao fim
+                        +----------------------+
+                        V                      |
+                 --> SRT_ID --> SRT_INT --> SRT_SUB --> FIM
+                            ler         ler         fim
+                           um ID        um       do ficheiro
+                                     intervalo
+\end{verbatim}
+
+Caso o fim do ficheiro seja encontrado fora da `SRT\_SUB`, mesmo que seja lido o ID ou o intervalo, o bloco não é adicionado ao vector e, portanto, o vector representa um ficheiro SRT completo e correcto.
 
 \chapter{Codificação e Testes}
 
 \section{Alternativas, Decisões e Problemas de Implementação}
 
+\subsection{Alocação Estática de Strings}
+
+Para a representação de um bloco SRT, o texto da legenda é uma string alocada estaticamente. Esta decisão foi tomada para simplificar a implementação do resto do programa, mas claro com os seus contras. Ao alocar espaço estaticamente, limitamos o tamanho máximo que a legenda pode ter.
+Alternativas a esta decisão seriam:
+
+\begin{enumerate}
+    \item alocar manualmente espaço, e restantes operações;
+    \item criar apenas as funções necessárias, visto serem poucas.
+    \item usar uma biblioteca de Strings que trata de tudo;
+\end{enumerate}
+
+A primeira opção, apesar de ser a mais simples, iria complicar muito o código restante. Achamos não valer a pena.\\
+A segunda opção, que requer mais trabalho por nossa parte, seria simples, não complicaria o código envolvente, e seria rápida de criar.\\
+A terceira opção, é a mais atraente visto requerer pouco trabalho por nossa parte, e a possibilidade de ser bem testada, mas seria ainda preciso aprender a usá-la e seria uma dependência extra para possíveis utilizadores do nosso programa.
+
+\subsection{Tempo}
+
+Para a representação de tempo, a escolha da stdlib foi a mais óbvia. Manipular tempo não é uma tarefa simples. Mesmo assim, encontramos limitações e tivemos de criar funções para converter entre diferentes representações de tempo e adicionar tempo, que possivelmente contêm erros.\\
+
 \chapter{Conclusão} \label{concl}
-Este trabalho foi um bom exercício de aprendizagem e práctica do `awk`.
 
-Um exemplo de uma melhoria a fazer neste programa é contar o número de relações lidas a partir dos cabeçalhos, comparar com o número de campos lidos nas linhas seguintes e fazer algo com essa informação.\\
-A seguir está um exemplo de um tal bloco e respectivas linhas que não encaixam na perfeição: no cabeçalho existem 2 campos além termo base, mas só existe 1 nas linhas que lhe seguem.
-
+Este trabalho foi um bom exercício de aprendizagem e práctica do `flex`, da linguagem C e da biblioteca `vec.h`. Em especial, a biblioteca foi melhorada graças ao uso da mesma neste trabalho.\\
 
 \appendix
 \chapter{Código do Programa}
 
-Lista-se a seguir o código do programa que foi desenvolvido.
+Lista-se a seguir o código do analisador léxico desenvolvido.
 
-\lstinputlisting{plc17TP2Gr17.l} %input de um ficheiro
+\lstinputlisting{plc17TP2Gr17.l}
 
 \bibliographystyle{alpha}
 \bibliography{relprojLayout}
