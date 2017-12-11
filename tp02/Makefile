@@ -41,11 +41,11 @@ exe1: obj
 exe2: obj
 	cc -static -Wall -Wextra -pedantic -g -o $(EXEC)2 $(OBJ) $(EXEC)2.o
 
-test1: all
+test1: exe1
 	./$(EXEC)1 harry_potter-fr1.srt harry_potter-pt1.srt 1 1 2>&1 | less
 
-test2: all
-	./$(EXEC)2 harry_potter-pt1.srt 2>&1 | less
+test2: exe2
+	./$(EXEC)2 harry_potter-fr1.srt 2>&1 | less
 
 tex:
 	pdflatex plc17TP2Gr17.tex
