@@ -20,6 +20,13 @@ WHITESPACE [ \r\t\n]
 '\[' { return LS; }
 '\]' { return RS; }
 
+"\<while\>"    { return FLWHILE; }
+"\<case\>"     { return FLCASE; }
+
+"\<char\>"     { return FLCHAR; }
+"\<int\>"      { return FLINT; }
+"\<string\>" { return FLSTRING; }
+
 \/\*(.|{WHITESPACE})*?\*\/ { /* C-style comment */
     /* BUG: '?' nao funciona? */
     puts("<comment>");
@@ -31,6 +38,7 @@ WHITESPACE [ \r\t\n]
     yylval.id = strdup(yytext);
     return IDENT;
 }
+
 \'{ALPHARE}\'    { return CHAR; }
 -?{DIGITRE}+     { return INTEGER; }
 \"([^"]|\\\")*\" { return STRING; }

@@ -1,4 +1,12 @@
 %{
+/* reserved keywords
+ * case
+ * char
+ * int
+ * return
+ * while
+ */
+
 #include <stdio.h>
 
 int yyerror (char * e);
@@ -25,6 +33,13 @@ int yylex (void);
 %token LS /* left square bracket */
 %token RS /* right square bracket */
 
+%token FLWHILE /* while loop construct */
+%token FLCASE  /* case construct */
+
+%token FLCHAR   /* char type */
+%token FLINT    /* int type */
+%token FLSTRING /* string type */
+
 %token CHAR
 %token IDENT
 %token INTEGER
@@ -41,16 +56,36 @@ PROGRAM : FUN_DEF /* entry point */
         | FUN_DEF PROGRAM
         ;
 
-FUN_DEF : IDENT DC PARAMS TYPE LD BODY RD ;
+FUN_DEF : IDENT DC PARAMS TYPE LD FUN_BODY RD ;
 
-BODY : BODY_CONTENT BODY
-     | BODY_CONTENT
+FUN_BODY : FUN_BODY_CONTENT RET
+         | RET
+         ;
+
+FUN_BODY_CONTENT : VAR_DECL
+                 | BODY_CONTENT
+                 ;
+
+BODY : BODY_CONTENT BODY ;
+
+BODY_CONTENT : /* empty */
+     | VAR_ASSIGN
+     | CONSTRUCT
      ;
 
-BODY_CONTENT : VAR_DECL
-             | VAR_ASSIGN
-             | RET
-             ;
+CONSTRUCT : CONSTRUCT_WHILE
+          | CONSTRUCT_CASE
+          ;
+
+CONSTRUCT_WHILE : FLWHILE RVAL LD BODY RD ;
+
+CONSTRUCT_CASE : FLCASE RVAL LD MATCHES RD ;
+
+MATCHES : MATCH
+        | MATCH MATCHES
+        ;
+
+MATCH : LITERAL LD BODY RD ;
 
 VAR_ASSIGN : LVAL AO RVAL ST ;
 
@@ -68,9 +103,12 @@ OP : '+'
    | '/'
    | '<'
    | '>'
+   | "!="
+   | "++"
+   | "--"
+   | "<="
    | "=="
    | ">="
-   | "<="
    ;
 
 PARAMS : /* sem params */
@@ -89,27 +127,27 @@ ARGS : /* sem argumentos */
      | RVAL ARGS
      ;
 
-RVAL : CONSTANT
+RVAL : LITERAL
      | FUN_CALL
      | VAR
      ;
 
-CONSTANT : CHAR
-         | INTEGER
-         | STRING
-         ;
+LITERAL : CHAR
+        | INTEGER
+        | STRING
+        ;
 
 LVAL : VAR
      | ARR_ACC
      ;
 
-ARR_ACC : VAR LS RVAL RS
-
 VAR : IDENT ;
 
-TYPE : CHAR
-     | INTEGER
-     | STRING
+ARR_ACC : VAR LS RVAL RS
+
+TYPE : FLCHAR
+     | FLINT
+     | FLSTRING
      ;
 %%
 
