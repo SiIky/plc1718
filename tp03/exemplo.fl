@@ -1,290 +1,255 @@
-/*
- * nao sei o que e pra fazer aqui... o que faco e comparar
- * os elems do arr. se forem todos iguais da true
- */
-is_square :: s: int[4] -> bool
+// nao sei o que e pra fazer aqui... o que faco e comparar
+// os elems do arr. se forem todos iguais da true
+is_square :: s: Int[] -> Int
 {
-    i: int = 1;
+    (= Int i 1)
 
-    while (&& (< i 4) (== s[i] s[(pred i)])) {
-        i = (succ i);
+    while (&& (< i 4) (== s[i] s[(-- i)])) {
+        (= i (++ i))
     }
 
-    return (== i 4);
+    (== i 4)
 }
 
-/* max entre 2 numeros inteiros */
-max :: a: int -> b: int -> int
+// max entre 2 numeros inteiros
+max :: a: Int -> b: Int -> Int
 {
-    return (cond (< a b) b a);
+    (? (> a b) a b)
 }
 
-/* min entre 2 numeros inteiros */
-min :: a: int -> b: int -> int
+// min entre 2 numeros inteiros
+min :: a: Int -> b: Int -> Int
 {
-    return (cond (< a b) a b);
+    (? (< a b) a b)
 }
 
-/* produtorio de um array */
-prod :: N: int -> arr: int[N] -> int
+// produtorio de um array
+prod :: N: Int -> arr: Int[] -> Int
 {
-    ret: int = arr[0];
-    i: int = 1;
+    (= Int r arr[0])
+    (= Int i 1)
 
     while (< i N) {
-        ret = (* ret arr[i]);
-        i = (succ i);
+        (= r (* r arr[i]))
+        (= i (++ i))
     }
 
-    return ret;
+    r
 }
 
-/* sumatorio de um array */
-sum :: N: int -> arr: int[N] -> int
+// sumatorio de um array
+sum :: N: Int -> arr: Int[] -> Int
 {
-    ret: int = arr[0];
-    i: int = 1;
+    (= Int r arr[0])
+    (= Int i 1)
 
     while (< i N) {
-        ret = (+ ret arr[i]);
-        i = (succ i);
+        (= r (+ r arr[i]))
+        (= i (++ i))
     }
 
-    return ret;
+    r
 }
 
-/* toda gente sabe esta */
-reverse :: N: int -> arr: int[N] -> int[N]
+// toda gente sabe esta
+reverse :: N: Int -> arr: Int[] -> Int[]
 {
-    l: int = 0;
-    r: int = 0;
-    tmp: int = 0;
+    (= Int l 0)
+    (= Int r 0)
+    (= Int tmp 0)
 
     while (< l r) {
-        tmp = arr[l];
-        arr[l] = arr[r];
-        arr[r] = tmp;
-        l = (succ l);
-        r = (pred r);
+        (= tmp    arr[l])
+        (= arr[l] arr[r])
+        (= arr[r] tmp)
+        (= l      (++ l))
+        (= r      (-- r))
     }
 
-    return arr;
+    arr
 }
 
-/* max de um array de inteiros */
-arrmax :: N: int -> arr: int[N] -> int
+// max de um array de inteiros
+arrmax :: N: Int -> arr: Int[] -> Int
 {
-    ret: int = arr[0];
-    i: int = 1;
+    (= Int r arr[0])
+    (= Int i 1)
 
     while (< i N) {
-        ret = (max ret arr[i]);
-        i = (succ i)
+        (= r (max r arr[i]))
+        (= i (++ i))
     }
 
-    return ret;
+    r
 }
 
-/* min de um array de inteiros */
-arrmin :: N: int -> arr: int[N] -> int
+// min de um array de inteiros
+arrmin :: N: Int -> arr: Int[] -> Int
 {
-    ret: int = arr[0];
-    i: int = 1;
+    (= Int r arr[0])
+    (= Int i 1)
 
     while (< i N) {
-        ret = (min ret arr[i]);
-        i = (succ i)
+        (= r (min r arr[i]))
+        (= i (++ i))
     }
 
-    return ret;
+    r
 }
 
-/* insert ordenado */
-insert :: N: int -> arr: int[N] -> elem: int -> int[N]
+// insert ordenado
+insert :: N: Int -> arr: Int[] -> elem: Int -> Int[]
 {
-    i: int = N;
+    (= Int i N)
 
     while (&& (> i 0) (> elem arr[i])) {
-        arr[i] = arr[(pred i)];
-        i = (pred i);
+        (= arr[i] arr[(-- i)])
+        (= i (-- i))
     }
 
-    arr[i] = elem;
-
-    return arr;
+    (= arr[i] elem)
+    arr
 }
 
-/* sort de um array */
-insertion_sort :: N: int -> arr: int[N] -> int[N] {
-    w: int = 0;
+// sort de um array
+insertion_sort :: N: Int -> arr: Int[] -> Int[] {
+    (= Int w 0)
 
     while (< w N) {
-        arr = (insert w arr arr[w]);
-        w = (succ w);
+        (= arr (insert w arr arr[w]))
+        (= w (++ w))
     }
 
-    return arr;
+    arr
 }
 
-abs :: x: int -> int
+abs :: x: Int -> Int
 {
-    return (cond (< x 0) (* -1 x) x);
+    (? (< x 0) (* -1 x) x)
 }
 
-is_even :: N: int -> bool
+is_even_iter :: N: Int -> Int
 {
-    N = (abs N);
+    (= N (abs N))
 
     while (> N 1) {
-        N = (- N 2);
+        (= N (- N 2))
     }
 
-    return (== N 0);
+    (== N 0)
 }
 
-/* filtra numeros pares */
-impares :: N: int -> arr: int[N] -> int
+// alternativa recursiva
+is_even_rec :: N: Int -> Int
 {
-    i: int = 0;
-    w: int = 0;
+    (? (> N 1) (is_even_rec (- N 2))
+    (? (< N 0) (is_even_rec (abs N))
+                   N)) // 0 <= N <= 1
+}
+
+// filtra numeros pares
+impares :: N: Int -> arr: Int[] -> Int
+{
+    (= Int i 0)
+    (= Int w 0)
+    (= Int e)
 
     while (i < N) {
-       e: bool = (is_even arr[i]);
-
-       arr[w] = (cond e arr[w] arr[i]);
-       w = (cond e w (succ w));
-
-       /* alternativa a `cond` para blocos em vez de valores
-        case e {
-            false {
-                arr[w] = arr[i];
-                w = (succ w);
-            }
-        }
-        */
-
-       i = (succ i);
+       (= e (is_even_iter arr[i]))
+       (= arr[w] (? e arr[w] arr[i]))
+       (= w (? e w (++ w)))
+       (= i (++ i))
     }
 
-    return w;
+    w
 }
 
-/* le `N` elementos para `arr` do `stdin` */
-arrread :: N: int -> arr: int[N] -> N
+// le `N` elementos para `arr` do `stdin`
+arrread :: N: Int -> arr: Int[] -> Int
 {
-    i: int = 0;
+    (= Int i 0)
 
     while (< i N) {
-        arr[i] = (read);
-        i = (succ i);
+        (= arr[i] (read))
+        (= i (++ i))
     }
 
-    return i;
+    i
 }
 
-/* imprime `N` elementos de `arr` pra `stdout` */
-arrprint :: N: int -> arr: int[N] -> bool
+// imprime `N` elementos de `arr` pra `stdout`
+arrprint :: N: Int -> arr: Int[] -> Int
 {
-    i: int = 0;
+    (= Int i 0)
 
     while (< i N) {
-        (print arr[i]);
-        i = (succ i);
+        (print arr[i])
+        (= i (++ i))
     }
 
-    return true;
+    i
 }
 
-/* Ler 4 numeros e dizer se podem ser os lados de um quadrado (?) */
-exe1 :: bool
+// Ler 4 numeros e dizer se podem ser os lados de um quadrado (?)
+exe1 :: Int
 {
-    N: int = 4;
-    arr: int[N];
-    i: int = 0;
-
-    N = (arrread N arr);
-
-    sq: bool = (is_square arr);
-
-    (print (cond sq "Sao quadrados\n" "Nao sao quadrados\n"));
-
-    return sq;
+    (= Int N 4)
+    (= Int[] arr)
+    (= N (arrread N arr))
+    (= Int sq (is_square arr))
+    (print (? sq "Sao quadrados\n" "Nao sao quadrados\n"))
+    sq
 }
 
-/* Ler um inteiro N, depois ler N numeros e escrever o menor deles */
-exe2 :: int
+// Ler um inteiro N, depois ler N numeros e escrever o menor deles
+exe2 :: Int
 {
-    N: int = (read);
-    arr: int[N];
-    i: int = 0;
-
-    ret: int = (arrmin (arrread N arr) arr);
-
-    (print ret);
-
-    return ret;
+    (= Int N (read))
+    (= Int[] arr)
+    (= Int r (arrmin (arrread N arr) arr))
+    (print r)
+    r
 }
 
-/*
- * ler N (constante do programa) numeros e calcular e
- * imprimir o seu produtorio
- */
-exe3 :: int
+// ler N (constante do programa) numeros e calcular e
+// imprimir o seu produtorio
+exe3 :: Int
 {
-    N: int = 5;
-    arr: int[N];
-
-    ret: int = (prod (arrread N arr) arr);
-
-    (print ret);
-
-    return ret;
+    (= Int N 5)
+    (= Int[] arr)
+    (= Int r (prod (arrread N arr) arr))
+    (print r)
+    ret
 }
 
-/*
- * contar e imprimir os numeros impares de uma sequencia
- * de numeros naturais
- */
-exe4 :: int
+// contar e imprimir os numeros impares de uma sequencia
+// de numeros naturais
+exe4 :: Int
 {
-    arr: int[11] = (-5 -4 -3 -2 -1 0 1 2 3 4 5);
-
-    (arrprint (impares 11 arr) arr);
-
-    return ret;
+    (= Int arr[11] (-5 -4 -3 -2 -1 0 1 2 3 4 5))
+    (arrprint (impares 11 arr) arr)
+    ret
 }
 
-/*
- * ler e armazenar os elementos de um vector de comprimento N;
- * imprimir os valores por ordem decrescente apos fazer a
- * ordenacao do array por trocas directas
- */
-exe5 :: int
+// ler e armazenar os elementos de um vector de comprimento N
+// imprimir os valores por ordem decrescente apos fazer a
+// ordenacao do array por trocas directas
+exe5 :: Int
 {
-    N: int = 10;
-    arr: int[N];
-    i: int = 0;
-
-    N = (arrread N arr);
-
-    (arrprint N (reverse N (insertion_sort N arr)));
-
-    return N;
+    (= Int N 10)
+    (= Int[] arr)
+    (= N (arrread N arr))
+    (arrprint N (reverse N (insertion_sort N arr)))
+    N
 }
 
-/*
- * ler e armazenar N numeros num array;
- * imprimir os valores por ordem inversa
- */
-exe6 :: int
+// ler e armazenar N numeros num array
+// imprimir os valores por ordem inversa
+exe6 :: Int
 {
-    N: int = 10;
-    i: int = 0;
-    arr: int[N];
-
-    N = (arrread N arr);
-
-    (arrprint N (reverse N arr));
-
-    return N;
+    (= Int N 10)
+    (= Int[] arr)
+    (= N (arrread N arr))
+    (arrprint N (reverse N arr))
+    N
 }

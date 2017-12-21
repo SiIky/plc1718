@@ -3,7 +3,6 @@
  * case
  * char
  * int
- * return
  * while
  */
 
@@ -17,137 +16,114 @@ int yylex (void);
     char * id;
     char * s;
     char c;
-    int i;
 }
 
-%token AO  /* assignment operator */
-%token CS  /* colon separator */
-%token DC  /* double colon */
-%token PS  /* param separator */
-%token ST  /* statement terminator */
-
-%token LD /* left body delimiter */
-%token RD /* right body delimiter */
-%token LP /* left paren */
-%token RP /* right paren */
-%token LS /* left square bracket */
-%token RS /* right square bracket */
-
 %token FLWHILE /* while loop construct */
-%token FLCASE  /* case construct */
+%token FLIF    /* if construct */
+%token FLELSE  /* else construct */
 
-%token FLCHAR   /* char type */
-%token FLINT    /* int type */
-%token FLSTRING /* string type */
-
-%token CHAR
 %token IDENT
 %token INTEGER
 %token STRING
 
-%type <c> CHAR
-%type <i> INTEGER
+%type <i>  INTEGER
 %type <id> IDENT
-%type <s> STRING
+%type <s>  STRING
 
 %%
 
-PROGRAM : FUN_DEF /* entry point */
-        | FUN_DEF PROGRAM
+PROGRAM : FUN_DEF PROGRAM
+        | FUN_DEF /* entry point */
         ;
 
-FUN_DEF : IDENT DC PARAMS TYPE LD FUN_BODY RD ;
+FUN_DEF : IDENT "::" PARAMS TYPE '{' FUN_BODY '}' ;
 
-FUN_BODY : FUN_BODY_CONTENT RET
-         | RET
-         ;
+PARAMS : PARAM PARAMS
+       | /* sem params */
+       ;
 
-FUN_BODY_CONTENT : VAR_DECL
-                 | BODY_CONTENT
+PARAM : IDENT ':' TYPE "->" ;
+
+/* Funcoes tem de devolver um resultado */
+FUN_BODY : FUN_BODY_CONTENT RVAL ;
+
+FUN_BODY_CONTENT : VAR_DECL FUN_BODY_CONTENT
+                 | CONSTRUCT FUN_BODY_CONTENT
+                 | FUN_CALL FUN_BODY_CONTENT /* funcoes podem ter efeitos secundarios */
+                 | VAR_ASSIGN FUN_BODY_CONTENT
+                 | /* empty */
                  ;
 
 BODY : BODY_CONTENT BODY ;
 
-BODY_CONTENT : /* empty */
-     | VAR_ASSIGN
-     | CONSTRUCT
-     ;
+BODY_CONTENT : FUN_CALL
+             | VAR_ASSIGN
+             | CONSTRUCT
+             | /* empty */
+             ;
 
 CONSTRUCT : CONSTRUCT_WHILE
-          | CONSTRUCT_CASE
+          | CONSTRUCT_IF
           ;
 
-CONSTRUCT_WHILE : FLWHILE RVAL LD BODY RD ;
+CONSTRUCT_WHILE : FLWHILE RVAL '{' BODY '}' ;
 
-CONSTRUCT_CASE : FLCASE RVAL LD MATCHES RD ;
+CONSTRUCT_IF : FLIF RVAL '{' BODY '}'
+             | FLIF RVAL '{' BODY '}' FLELSE '{' BODY '}'
+             | FLIF RVAL '{' BODY '}' FLELSE CONSTRUCT_IF
+             ;
 
-MATCHES : MATCH
-        | MATCH MATCHES
-        ;
+VAR_ASSIGN : '(' '=' LVAL RVAL ')' ;
 
-MATCH : LITERAL LD BODY RD ;
+LVAL : IDENT '[' RVAL ']' /* array access */
+     | IDENT
+     ;
 
-VAR_ASSIGN : LVAL AO RVAL ST ;
-
-RET : "ret" RVAL ST ;
-
-FUN_CALL : LP FUN_NAME ARGS RP ;
+FUN_CALL : '(' FUN_NAME ARGS ')' ;
 
 FUN_NAME : IDENT
          | OP
          ;
 
-OP : '+'
-   | '*'
-   | '-'
-   | '/'
-   | '<'
-   | '>'
-   | "!="
-   | "++"
-   | "--"
-   | "<="
-   | "=="
-   | ">="
+OP : "!=" /* diferente */
+   | "&&" /* e logico */
+   | "++" /* incrementar */
+   | "--" /* decrementar */
+   | "<=" /* menor ou igual */
+   | "==" /* igual */
+   | ">=" /* maior ou igual */
+   | "||" /* ou logico */
+   | '!'  /* negacao logica */
+   | '*'  /* multiplicacao */
+   | '+'  /* soma */
+   | '-'  /* subtraccao */
+   | '/'  /* divisao */
+   | '<'  /* menor */
+   | '>'  /* maior */
+   | '?'  /* condicional ternario (a la C) */
    ;
 
-PARAMS : /* sem params */
-       | PARAM PARAMS
-       ;
-
-PARAM : VAR_TYPE PS ;
-
-VAR_TYPE : IDENT CS TYPE ;
-
-VAR_DECL : VAR_TYPE AO RVAL ST
-         | VAR_TYPE ST
+VAR_DECL : '(' '=' TYPE IDENT RVAL ')'
+         | '(' '=' TYPE IDENT ')'
          ;
 
-ARGS : /* sem argumentos */
-     | RVAL ARGS
+ARGS : RVAL ARGS
+     | /* sem argumentos */
      ;
 
 RVAL : LITERAL
      | FUN_CALL
-     | VAR
+     | LVAL
      ;
 
-LITERAL : CHAR
-        | INTEGER
+LITERAL : INTEGER
         | STRING
         ;
 
-LVAL : VAR
-     | ARR_ACC
-     ;
-
-VAR : IDENT ;
-
-ARR_ACC : VAR LS RVAL RS
-
-TYPE : FLCHAR
-     | FLINT
-     | FLSTRING
+TYPE : "Int[]"
+     | "Int"
+     | "Char"
+     | "String"
      ;
 %%
 
@@ -155,8 +131,9 @@ TYPE : FLCHAR
 
 int yyerror (char * e)
 {
-    printf("ERROR: %s\n"
-           "with input:%s\n",
+    printf("<--codigo ate aqui\n"
+           "ERROR: %s\n"
+           "with input:`%s`\n",
            e,
            yytext);
     return 0;
@@ -168,9 +145,12 @@ int main (int argc, char ** argv)
         stdin :
         fopen(argv[1], "r") ;
 
-    if (yyin == NULL)
+if (yyin == NULL)
         return 1;
 
-    yyparse();
-    return 0;
+yyparse();
+
+fclose(yyin);
+
+return 0;
 }
