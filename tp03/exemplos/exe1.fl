@@ -1,0 +1,20 @@
+// Ler 4 numeros e dizer se podem ser os lados de um quadrado (?)
+(= Int N 4)
+(= Int i 0)
+(= Int[] arr)
+
+// le N numeros pro arr
+while (< i N) {
+    (= arr[i] (readint))
+    (= i (++ i))
+}
+
+// verifica se os numeros lidos sao todos iguais
+(= i 0)
+while (&& (< i N) (== s[i] s[(-- i)])) {
+    (= i (++ i))
+}
+
+(print (? (== i N)
+        "Sao quadrados\n"
+        "Nao sao quadrados\n"))

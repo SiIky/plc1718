@@ -55,7 +55,7 @@ sum :: N: Int -> arr: Int[] -> Int
 reverse :: N: Int -> arr: Int[] -> Int[]
 {
     (= Int l 0)
-    (= Int r 0)
+    (= Int r (-- N))
     (= Int tmp 0)
 
     while (< l r) {

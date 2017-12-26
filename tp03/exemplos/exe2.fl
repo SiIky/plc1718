@@ -1,0 +1,19 @@
+// Ler um inteiro N, depois ler N numeros e escrever o menor deles
+(= Int N (read))
+(= Int i 0)
+(= Int[] arr)
+
+// le N numeros pro arr
+while (< i N) {
+    (= arr[i] (readint))
+    (= i (++ i))
+}
+
+(= Int m arr[0])
+(= i 1)
+while (< i N) {
+    (= arr[i] (? (< arr[i] m) arr[i] m))
+    (= i (++ i))
+}
+
+(write m)

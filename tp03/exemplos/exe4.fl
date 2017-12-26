@@ -1,0 +1,20 @@
+// contar e imprimir os numeros impares de uma sequencia
+// de numeros naturais
+(= Int arr[11] (-5 -4 -3 -2 -1 0 1 2 3 4 5))
+(= Int i 0)
+(= Int w 0)
+
+// Filter Uneven
+while (< i 11) {
+    if (== 1 (% arr[i] 2)) {
+        (= arr[w] arr[i])
+        (= w (++ w))
+    }
+    (= i (++ i))
+}
+
+(= i 0)
+while (< i 11) {
+    (write arr[i])
+    (= i (++ i))
+}
