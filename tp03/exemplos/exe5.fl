@@ -1,0 +1,48 @@
+// ler e armazenar os elementos de um vector de comprimento N
+// imprimir os valores por ordem decrescente apos fazer a
+// ordenacao do array por trocas directas
+(= Int N 10)
+(= Int[] arr)
+(= Int i 0)
+(= Int ii 0)
+
+// le N numeros pro arr
+while (< i N) {
+    (= arr[i] (readint))
+    (= i (++ i))
+}
+
+// Insertion Sort {
+(= i 0)
+while (< i N) {
+    // Insert {
+    while (&& (> ii 0) (> arr[i] arr[ii])) {
+        (= arr[ii] arr[(-- ii)])
+        (= ii (-- ii))
+    }
+    (= arr[ii] arr[i])
+    // }
+
+    (= i (++ i))
+}
+// }
+
+// Reverse {
+(= i 0)
+(= ii (-- N))
+(= Int tmp 0)
+while (< i ii) {
+        (= tmp     arr[i])
+        (= arr[i]  arr[ii])
+        (= arr[ii] tmp)
+        (= i       (++ i))
+        (= ii      (-- ii))
+}
+// }
+
+// Print array
+(= i 0)
+while (< i N) {
+    (write arr[i])
+    (= i (++ i))
+}

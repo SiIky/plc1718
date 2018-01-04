@@ -1,0 +1,31 @@
+// ler e armazenar N numeros num array
+// imprimir os valores por ordem inversa
+(= Int N 10)
+(= Int[] arr)
+(= Int i 0)
+
+// le N numeros pro arr
+while (< i N) {
+    (= arr[i] (readint))
+    (= i (++ i))
+}
+
+// Reverse {
+(= i 0)
+(= ii (-- N))
+(= Int tmp 0)
+while (< i ii) {
+        (= tmp     arr[i])
+        (= arr[i]  arr[ii])
+        (= arr[ii] tmp)
+        (= i       (++ i))
+        (= ii      (-- ii))
+}
+// }
+
+// Print array
+(= i 0)
+while (< i N) {
+    (write arr[i])
+    (= i (++ i))
+}

@@ -1,4 +1,11 @@
 %{
+/* reserved keywords
+ * case
+ * char
+ * int
+ * while
+ */
+
 #include <stdio.h>
 
 int yyerror (char * e);
@@ -9,107 +16,114 @@ int yylex (void);
     char * id;
     char * s;
     char c;
-    int i;
 }
 
-%token AO  /* assignment operator */
-%token CS  /* colon separator */
-%token DC  /* double colon */
-%token PS  /* param separator */
-%token ST  /* statement terminator */
+%token FLWHILE /* while loop construct */
+%token FLIF    /* if construct */
+%token FLELSE  /* else construct */
 
-%token LD /* left body delimiter */
-%token RD /* right body delimiter */
-%token LP /* left paren */
-%token RP /* right paren */
-%token LS /* left square bracket */
-%token RS /* right square bracket */
-
-%token CHAR
 %token IDENT
 %token INTEGER
 %token STRING
 
-%type <c> CHAR
-%type <i> INTEGER
+%type <i>  INTEGER
 %type <id> IDENT
-%type <s> STRING
+%type <s>  STRING
 
 %%
 
-PROGRAM : FUN_DEF /* entry point */
-        | FUN_DEF PROGRAM
+PROGRAM : FUN_DEF PROGRAM
+        | FUN_DEF /* entry point */
         ;
 
-FUN_DEF : IDENT DC PARAMS TYPE LD BODY RD ;
+FUN_DEF : IDENT "::" PARAMS TYPE '{' FUN_BODY '}' ;
 
-BODY : BODY_CONTENT BODY
-     | BODY_CONTENT
-     ;
+PARAMS : PARAM PARAMS
+       | /* sem params */
+       ;
 
-BODY_CONTENT : VAR_DECL
+PARAM : IDENT ':' TYPE "->" ;
+
+/* Funcoes tem de devolver um resultado */
+FUN_BODY : FUN_BODY_CONTENT RVAL ;
+
+FUN_BODY_CONTENT : VAR_DECL FUN_BODY_CONTENT
+                 | CONSTRUCT FUN_BODY_CONTENT
+                 | FUN_CALL FUN_BODY_CONTENT /* funcoes podem ter efeitos secundarios */
+                 | VAR_ASSIGN FUN_BODY_CONTENT
+                 | /* empty */
+                 ;
+
+BODY : BODY_CONTENT BODY ;
+
+BODY_CONTENT : FUN_CALL
              | VAR_ASSIGN
-             | RET
+             | CONSTRUCT
+             | /* empty */
              ;
 
-VAR_ASSIGN : LVAL AO RVAL ST ;
+CONSTRUCT : CONSTRUCT_WHILE
+          | CONSTRUCT_IF
+          ;
 
-RET : "ret" RVAL ST ;
+CONSTRUCT_WHILE : FLWHILE RVAL '{' BODY '}' ;
 
-FUN_CALL : LP FUN_NAME ARGS RP ;
+CONSTRUCT_IF : FLIF RVAL '{' BODY '}'
+             | FLIF RVAL '{' BODY '}' FLELSE '{' BODY '}'
+             | FLIF RVAL '{' BODY '}' FLELSE CONSTRUCT_IF
+             ;
+
+VAR_ASSIGN : '(' '=' LVAL RVAL ')' ;
+
+LVAL : IDENT '[' RVAL ']' /* array access */
+     | IDENT
+     ;
+
+FUN_CALL : '(' FUN_NAME ARGS ')' ;
 
 FUN_NAME : IDENT
          | OP
          ;
 
-OP : '+'
-   | '*'
-   | '-'
-   | '/'
-   | '<'
-   | '>'
-   | "=="
-   | ">="
-   | "<="
+OP : "!=" /* diferente */
+   | "&&" /* e logico */
+   | "++" /* incrementar */
+   | "--" /* decrementar */
+   | "<=" /* menor ou igual */
+   | "==" /* igual */
+   | ">=" /* maior ou igual */
+   | "||" /* ou logico */
+   | '!'  /* negacao logica */
+   | '*'  /* multiplicacao */
+   | '+'  /* soma */
+   | '-'  /* subtraccao */
+   | '/'  /* divisao */
+   | '<'  /* menor */
+   | '>'  /* maior */
+   | '?'  /* condicional ternario (a la C) */
    ;
 
-PARAMS : /* sem params */
-       | PARAM PARAMS
-       ;
-
-PARAM : VAR_TYPE PS ;
-
-VAR_TYPE : IDENT CS TYPE ;
-
-VAR_DECL : VAR_TYPE AO RVAL ST
-         | VAR_TYPE ST
+VAR_DECL : '(' '=' TYPE IDENT RVAL ')'
+         | '(' '=' TYPE IDENT ')'
          ;
 
-ARGS : /* sem argumentos */
-     | RVAL ARGS
+ARGS : RVAL ARGS
+     | /* sem argumentos */
      ;
 
-RVAL : CONSTANT
+RVAL : LITERAL
      | FUN_CALL
-     | VAR
+     | LVAL
      ;
 
-CONSTANT : CHAR
-         | INTEGER
-         | STRING
-         ;
+LITERAL : INTEGER
+        | STRING
+        ;
 
-LVAL : VAR
-     | ARR_ACC
-     ;
-
-ARR_ACC : VAR LS RVAL RS
-
-VAR : IDENT ;
-
-TYPE : CHAR
-     | INTEGER
-     | STRING
+TYPE : "Int[]"
+     | "Int"
+     | "Char"
+     | "String"
      ;
 %%
 
@@ -117,8 +131,9 @@ TYPE : CHAR
 
 int yyerror (char * e)
 {
-    printf("ERROR: %s\n"
-           "with input:%s\n",
+    printf("<--codigo ate aqui\n"
+           "ERROR: %s\n"
+           "with input:`%s`\n",
            e,
            yytext);
     return 0;
@@ -130,9 +145,12 @@ int main (int argc, char ** argv)
         stdin :
         fopen(argv[1], "r") ;
 
-    if (yyin == NULL)
+if (yyin == NULL)
         return 1;
 
-    yyparse();
-    return 0;
+yyparse();
+
+fclose(yyin);
+
+return 0;
 }

@@ -4,36 +4,33 @@
 
 ALPHARE [a-zA-Z]
 DIGITRE [0-9]
-WHITESPACE [ \r\t\n]
+WHITESPACE [ \r\t]
 %%
 
-'='  { return AO; }
-"::" { return DC; }
-':'  { return CS; }
-"->" { return PS; }
-';'  { return ST; }
+while { return FLWHILE; }
+if  { return FLIF; }
+else { return FLELSE; }
 
-'\{' { return LD; }
-'\}' { return RD; }
-'\(' { return LP; }
-'\)' { return RP; }
-'\[' { return LS; }
-'\]' { return RS; }
-
-\/\*(.|{WHITESPACE})*?\*\/ { /* C-style comment */
-    /* BUG: '?' nao funciona? */
-    puts("<comment>");
-    puts(yytext);
-    puts("</comment>");
+\/\/({WHITESPACE}|.)* { /* C++-style comments */
+    printf("%s", yytext);
 }
 
 ({ALPHARE}|_)({ALPHARE}|{DIGITRE}|_|')* {
     yylval.id = strdup(yytext);
+    printf("%s", yylval.id);
     return IDENT;
 }
-\'{ALPHARE}\'    { return CHAR; }
--?{DIGITRE}+     { return INTEGER; }
-\"([^"]|\\\")*\" { return STRING; }
+
+-?{DIGITRE}+     {
+    return INTEGER;
+}
+
+\"([^"]|\\\")*\" {
+    if (yylval.s != NULL)
+        free(yylval.s);
+    yylval.s = strdup(yytext);
+    return STRING;
+}
 
 {WHITESPACE} { ; }
 

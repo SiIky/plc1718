@@ -1,0 +1,47 @@
+start
+
+pushi 0 // [0] soma = 0
+
+pushs "quantos numeros queres que some?\n"
+writes
+
+// le uma string do stdin e tenta converter pra inteiro
+read
+atoi // [1]
+
+pushi 0 // [2] i = 0
+dup 2   // [3,4] duplicar i e N pra comparacao
+equal   // [3] N == i
+jz resultado
+
+// inicio do loop -- le um numero e soma o ao acumulador
+loop: nop
+// ler novo numero pra adicionar
+read
+atoi
+
+pushl 0  // buscar soma
+add      // adicionar com o numero lido
+storel 0 // guardar soma
+
+// vai buscar i, incrementa, e guarda outra vez
+pushi 1
+add
+dup 2
+finf // N > i
+jz loop
+
+////////////////////////
+// resultado da funcao
+resultado: nop
+pushs "a soma dos "
+writes
+
+writei // imprime N
+
+pushs " numeros que escolheste e "
+writes
+
+writei // imprime soma
+
+stop
