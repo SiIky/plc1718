@@ -81,8 +81,7 @@
 \maketitle
 
 \begin{abstract}
-Este relatório debruça-se sobre o estudo e desenvolvimento de filtros de texto, em específico, com o gerador de análise léxica Flex, de forma a filtrar e/ou transformar o conteúdo de texto.
-Os objectivos focam-se em reforçar o domínio da utilização de Expressões Regulares (padõres) e de gramáticas com o objectivo de extrair/filtrar/transformar o conteúdo de texto.
+Este relatório debruça-se sobre o estudo e desenvolvimento de filtros de texto, em particular, com o gerador de análise léxica Flex e Expressões Regulares (regexes), de forma a extrair, filtrar e transformar o conteúdo de texto.
 \end{abstract}
 
 \tableofcontents
@@ -111,7 +110,7 @@ Legendas no formato SRT têm o seguinte formato:
 \end{verbatim}
 
 As linhas 1, 5, 10, 14 contêm os identificadores de legenda. As linhas 2, 6, 11, 15 contêm os tempos de início e desaparecimento de legenda. As legendas são separadas por linha em branco.\\
-Considere ainda que dispomos lengendas do mesmo filme em várias línguas, mas que frequentemente diferem no tempo inicial e duração de filme.
+Considere ainda que dispomos de legendas do mesmo filme em várias línguas, mas que frequentemente diferem no tempo inicial e duração de filme.
 
 \begin{enumerate}[1.]
     \item Construa um sincronizador de legendas:
@@ -139,11 +138,12 @@ Considere ainda que dispomos lengendas do mesmo filme em várias línguas, mas q
 
 \subsection{Sincronizador de Legendas}
 
-Tendo por base o enunciado referido acima e tendo em foco o objectivo de desenvolver algo útil no contexto do problema, em grupo, decidi-mos que se deveria alterar o problema da primeira alínea:
-fazer uma translação de todos os blocos de forma a que os tempos relativos das legendas do ficheiro `b.srt` se mantenham, mas a legenda com ID `b1` do ficheiro `b.srt` tenha o mesmo tempo de início da legenda com ID `a1` do ficheiro `a.srt`.
+
+Tendo por base o enunciado referido acima, e tendo em foco o objectivo de desenvolver algo útil no contexto do problema, decidimos que se deveria alterar o problema da primeira alínea. Propomos o seguinte:
+fazer uma translação de todos os blocos de forma a que os tempos relativos das legendas do ficheiro ‘b.srt‘ se mantenham, mas a legenda com ID ‘idb‘ do ficheiro ‘b.srt‘ tenha o mesmo tempo de início da legenda com ID ‘ida‘ do ficheiro ‘a.srt‘.
 
 \begin{verbatim}
-exe1 a.srt b.srt a1 b1 > b-sync.srt
+exe1 a.srt b.srt ida idb > b-sync.srt
 \end{verbatim}
 
 \subsection{Processador de Legendas}
@@ -155,24 +155,29 @@ Esta alínea é relativamente fácil: muito resumidamente, consiste em alterar a
 \section{Estruturas de Dados}
 
 Para a realização deste trabalho precisamos de trabalhar com tempos e intervalos de tempo. Para tal, decidimos usar as estruturas de dados e respectivas funções da header file `time.h`. Contudo, as estruturas disponíveis não têm representação de milissegundos. Para tal, criamos uma nova estrutura, baseada na estrutura da stdlib, com milissegundos:
+
 \lstinputlisting[firstnumber=6,linerange={6-9}]{srt.h}
 
 Esta estrutura representa um intervalo de tempo:
+
 \lstinputlisting[firstnumber=11,linerange={11-14}]{srt.h}
 
 Esta estrutura representa um bloco SRT, constituindo o ID da legenda, um intervalo de tempo e o texto da legenda:
+
 \lstinputlisting[firstnumber=16,linerange={16-20}]{srt.h}
 
 Para guardar ficheiros completos como um conjunto ordenado de blocos SRT, decidimos usar uma biblioteca criada por um dos elementos do grupo. Esta biblioteca define um vector dinâmico e funções para o manipular.
 Este vector é definido como a seguir se mostra:
+
 \lstinputlisting[firstnumber=92,linerange={92-92,94-94,96-96,98-99}]{vec.h}
-em que `VEC\_VEC` é um nome à escolha do utilizador da biblioteca, e `VEC\_DDATA\_TYPE` é um macro que expande para o tipo de dados que pretendemos guardar no vector.
+
+em que `VEC\_VEC` e `VEC\_DDATA\_TYPE` são macros que expandem para, respectivamente, um nome para o tipo do vector e o tipo de dados que pretendemos guardar no vector.
 
 \section{Algoritmos}
 
 \subsection{Processar o(s) ficheiro(s) de entrada}
 
-Apesar do exercício pedir dois executáveis, criamos e usamos apenas um analisador léxico. Este lê o ficheiro de entrada na integra e guarda-o com o auxílio das estruturas acima mencionadas.
+Apesar do exercício pedir dois executáveis, criámos e usámos apenas um analisador léxico que lê o ficheiro de entrada na íntegra e guarda-o com o auxílio das estruturas acima mencionadas.
 
 Desta forma, basta criar um ponto de entrada do programa diferente, a função `main`, e funções específicas para cada problema a resolver.\\
 
@@ -205,7 +210,7 @@ Caso o fim do ficheiro seja encontrado fora da `SRT\_SUB`, mesmo que seja lido o
 
 \subsection{Alocação Estática de Strings}
 
-Para a representação de um bloco SRT, o texto da legenda é uma string alocada estaticamente. Esta decisão foi tomada para simplificar a implementação do resto do programa, mas claro com os seus contras. Ao alocar espaço estaticamente, limitamos o tamanho máximo que a legenda pode ter.
+Para a representação de um bloco SRT, o texto da legenda é uma string alocada estaticamente. Esta decisão foi tomada para simplificar a implementacão do resto do programa, embora tenha desvantagens: ao alocar espaço estaticamente, limitamos o tamanho máximo que a legenda pode ter. 
 Alternativas a esta decisão seriam:
 
 \begin{enumerate}
@@ -214,13 +219,13 @@ Alternativas a esta decisão seriam:
     \item usar uma biblioteca de Strings que trata de tudo;
 \end{enumerate}
 
-A primeira opção, apesar de ser a mais simples, iria complicar muito o código restante. Achamos não valer a pena.\\
+A primeira opção, apesar de ser a mais simples, iria complicar muito o restante código. Achámos a nossa solução mais eficaz.\\
 A segunda opção, que requer mais trabalho por nossa parte, seria simples, não complicaria o código envolvente, e seria rápida de criar.\\
-A terceira opção, é a mais atraente visto requerer pouco trabalho por nossa parte, e a possibilidade de ser bem testada, mas seria ainda preciso aprender a usá-la e seria uma dependência extra para possíveis utilizadores do nosso programa.
+A terceira opção seria a mais atraente, por requerer pouco trabalho da nossa parte e ser possível testá-la eficazmente; mas seria ainda preciso aprender a usá-la e seria uma dependência extra para eventuais utilizadores do nosso programa.
 
 \subsection{Tempo}
 
-Para a representação de tempo, a escolha da stdlib foi a mais óbvia. Manipular tempo não é uma tarefa simples. Mesmo assim, encontramos limitações e tivemos de criar funções para converter entre diferentes representações de tempo e adicionar tempo, que possivelmente contêm erros.\\
+Para a representação de tempo, a escolha da stdlib foi a mais óbvia. Manipular tempo não é uma tarefa simples. Mesmo assim, encontrámos limitações e tivemos de criar funções para converter entre diferentes representações e adicionar tempo, que possivelmente contêm erros.\\
 
 \chapter{Conclusão} \label{concl}
 
