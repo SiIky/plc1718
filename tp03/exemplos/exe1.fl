@@ -10,7 +10,7 @@ while (< i N) {
 }
 
 // verifica se os numeros lidos sao todos iguais
-(= i 0)
+(= i 1)
 while (&& (< i N) (== s[i] s[(-- i)])) {
     (= i (++ i))
 }

@@ -1,19 +1,14 @@
 // ler N (constante do programa) numeros e calcular e
 // imprimir o seu produtorio
 (= Int N 5)
-(= Int i 0)
-(= Int[] arr)
+(= Int i 1)
+(= Int p (readint))
+(= Int tmp 0)
 
 // le N numeros pro arr
 while (< i N) {
-    (= arr[i] (readint))
-    (= i (++ i))
-}
-
-(= Int p arr[0])
-(= i 1)
-while (< i N) {
-    (= p (* p arr[i]))
+    (= tmp (readint))
+    (= p (* p tmp))
     (= i (++ i))
 }
 

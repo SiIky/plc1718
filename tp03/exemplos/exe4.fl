@@ -1,6 +1,6 @@
 // contar e imprimir os numeros impares de uma sequencia
 // de numeros naturais
-(= Int arr[11] (-5 -4 -3 -2 -1 0 1 2 3 4 5))
+(= Int arr[11] (0 1 2 3 4 5 6 7 8 9 10 11))
 (= Int i 0)
 (= Int w 0)
 
